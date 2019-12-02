@@ -159,6 +159,31 @@ public class Line {
 		Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 		Line tempEnemies = (isFriend) ? board.getEnemies() : board.getFriends();
 		
+		
+		// Rivendare triggers even if he dies w/ deathrattles, so gather that information right at the beginning
+		Effect friendlyRiven = Effect.None;
+		for(Minion m : tempFriends.minions) {
+			if(m.getEffect() == Effect.Baron_Rivendare) {
+				if(friendlyRiven == Effect.None)
+					friendlyRiven = Effect.Baron_Rivendare;
+			} else if(m.getEffect() == Effect.Gold_Baron_Rivendare) {
+				if(friendlyRiven != Effect.Gold_Baron_Rivendare)
+					friendlyRiven = Effect.Gold_Baron_Rivendare;
+			}
+		}
+		
+		Effect enemyRiven = Effect.None;
+		for(Minion m : tempEnemies.minions) {
+			if(m.getEffect() == Effect.Baron_Rivendare) {
+				if(enemyRiven == Effect.None)
+					enemyRiven = Effect.Baron_Rivendare;
+			} else if(m.getEffect() == Effect.Gold_Baron_Rivendare) {
+				if(enemyRiven != Effect.Gold_Baron_Rivendare)
+					enemyRiven = Effect.Gold_Baron_Rivendare;
+			}
+		}
+		
+		
 		if(friendlyDeaths != null && friendlyDeaths.size() > 0) {
 			for(SimpleEntry<Integer, ArrayList<Deathrattle>> entry : friendlyDeaths) {
 				int _pos = entry.getKey();
