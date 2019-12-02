@@ -10,7 +10,7 @@ import nkolbow.board.minions.Minion.Tribe;
 import nkolbow.debug.Debug;
 
 public class Line {
-	
+	 
 	private LinkedList<Minion> minions;
 	private LinkedList<Minion> mechDeathOrder;
 	// the index of the minion next to attack
