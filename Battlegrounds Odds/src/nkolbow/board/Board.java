@@ -71,8 +71,8 @@ public class Board {
 							+ "\nOverall average damage: " + String.format("%.2f", ((double)(totalTaken + totalDealt))/(totalWins + totalLosses + totalTies))
 							+ ((maxDealtBoard == null) ? "" : "\n" + maxDealtBoard.toString())
 							+ "\nAverage taken on losses: " + String.format("%.2f", (double)totalTaken/(double)totalLosses) + "\t\tMax taken: " + maxTaken
-							+ ((maxTakenBoard == null) ? "" : "\n" + maxTakenBoard.toString())
-							+ ((maxTakenBoard == null) ? "" : "\n") + "=================================================");
+							+ ((maxTakenBoard == null) ? "" : "\n" + maxTakenBoard.toString() + "\n")
+							+ "=================================================");
 	}
 	
 	private static void battleRecur(Board mainBoard, boolean friendAttack) {
