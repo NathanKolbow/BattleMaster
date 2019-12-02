@@ -68,11 +68,11 @@ public class Board {
 							+ "\nTotal losses: \t\t" + totalLosses + "\t%Chance: ~" + String.format("%.2f", (((double)totalLosses*100)/(double)(totalTies+totalWins+totalLosses))) + "%"
 							+ "\nTotal ties: \t\t" + totalTies + "\t%Chance: ~" + String.format("%.2f", (((double)totalTies*100)/(double)(totalTies+totalWins+totalLosses))) + "%"
 							+ "\n\nAverage dealt on wins: " + String.format("%.2f", ((double)totalDealt/(double)totalWins)) + "\t\tMax dealt: " + maxDealt
-							+ "\nAverage taken on losses: " + String.format("%.2f", (double)totalTaken/(double)totalLosses) + "\t\tMax taken: " + maxTaken
-							+ ((maxTakenBoard == null) ? "" : "\n" + maxTakenBoard.toString())
 							+ "\nOverall average damage: " + String.format("%.2f", ((double)(totalTaken + totalDealt))/(totalWins + totalLosses + totalTies))
 							+ ((maxDealtBoard == null) ? "" : "\n" + maxDealtBoard.toString())
-							+ ((maxDealtBoard == null) ? "\n" : "") + "=================================================");
+							+ "\nAverage taken on losses: " + String.format("%.2f", (double)totalTaken/(double)totalLosses) + "\t\tMax taken: " + maxTaken
+							+ ((maxTakenBoard == null) ? "" : "\n" + maxTakenBoard.toString())
+							+ ((maxTakenBoard == null) ? "" : "\n") + "=================================================");
 	}
 	
 	private static void battleRecur(Board mainBoard, boolean friendAttack) {

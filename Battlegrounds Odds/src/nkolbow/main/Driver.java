@@ -6,10 +6,24 @@ import nkolbow.board.FullBoardException;
 public class Driver {
 
 	public static void main(String[] args) {
-		Board b = new Board(2, 2);
+		Board b = new Board(5, 2);
 		
 		try {
-/*			// Kripparian double unlucky first battle
+/*			b.addMinion("foe.M.21.22.6;c;;", true, Integer.MAX_VALUE);
+			b.addMinion("cobalt.M.30.23.3;d;;", true, Integer.MAX_VALUE);
+			b.addMinion("murloc.m.17.20.1;pd;;", true, Integer.MAX_VALUE);
+			b.addMinion("iron_sensei.M.21.15.4;;;", true, Integer.MAX_VALUE);
+			b.addMinion("micro1.M.1.1.1;;;", true, Integer.MAX_VALUE);
+			
+			b.addMinion("summ.M.8.7.1;;;", false, Integer.MAX_VALUE);
+			b.addMinion("amalgom.a.54.45.2;pt;;", false, Integer.MAX_VALUE);
+			b.addMinion("battle.d.9.40.5;;;", false, Integer.MAX_VALUE);
+			
+			b.getFriends()._attacking = 1;
+			b.getEnemies()._attacking = 1;										*/
+			
+			
+			// Kripparian double unlucky first battle
 			b.addMinion("amalgom.a.3.4.2;;;", true, Integer.MAX_VALUE);
 			b.addMinion("amalgom2.a.3.4.2;;;", true, Integer.MAX_VALUE);
 			b.addMinion("tabby.b.3.3.1;;;", true, Integer.MAX_VALUE);
@@ -21,16 +35,19 @@ public class Driver {
 			b.addMinion("rover.M.4.6.4;;;l", false, Integer.MAX_VALUE);
 			b.addMinion("leaper.M.3.3.2;;;", false, Integer.MAX_VALUE);
 			b.addMinion("pack_leader..3.3.3;;;g", false, Integer.MAX_VALUE);
-			b.addMinion("tide.m.2.1.1;;;", false, Integer.MAX_VALUE);			*/
+			b.addMinion("tide.m.2.1.1;;;", false, Integer.MAX_VALUE);			
 			
 			// second battle
 //			b.addMinion(minion, isFriend, position);
 			
 			
-			// Deathrattle testing (yay!)
+
+/*			// Deathrattle testing (yay!)
+			// Should be 100% win
 			b.addMinion("rat_pack.b.1.1.1;;G;", true, Integer.MAX_VALUE);
 			
-			b.addMinion("irrel..1.1.1;;;", false, Integer.MAX_VALUE);
+			b.addMinion("irrel..1.1.1;;;", false, Integer.MAX_VALUE);			*/
+			
 			
 			
 /*			// Testing security rover

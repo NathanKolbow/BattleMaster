@@ -71,6 +71,9 @@ public class Minion {
 	
 	public String getName() { return this.name; }
 	
+	public Board getBoard() { return this.board; }
+	public Line getLine() { return this.line; }
+	
 	public int getStars() { return this.stars; }
 	public void setBaseHealth(int h) { this.health = h; }
 	public int getBaseHealth() { return this.health; }
@@ -166,7 +169,7 @@ public class Minion {
 		if(this.hasDivine) {
 			this.setDivine(false);
 		} else {
-			this.takeDamage(-15000);
+			this.takeDamage(15000);
 		}
 	}
 	
@@ -209,7 +212,7 @@ public class Minion {
 	/**
 	 * @return - the total amount of minions that this minion summons when it dies
 	 */
-	public int totalSummons() {
+	public int getTotalSummons() {
 		return 0;
 	}
 	

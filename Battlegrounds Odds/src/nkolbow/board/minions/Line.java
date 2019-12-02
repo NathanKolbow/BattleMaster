@@ -88,8 +88,6 @@ public class Line {
 						tempEnemies.decAttacking();
 					else if(tempEnemies._attacking == tempEnemies.minions.indexOf(m) && tempEnemies._attacking == tempEnemies.minions.size() - 1)
 						tempEnemies._attacking = 0; // TODO: remove when deathrattles added*/
-				} else {
-					Debug.log(m.getName() + " is NOT dead.", 1);
 				}
 			}
 
@@ -162,8 +160,18 @@ public class Line {
 		Line tempEnemies = (isFriend) ? board.getEnemies() : board.getFriends();
 		
 		if(friendlyDeaths != null && friendlyDeaths.size() > 0) {
-			if(friendlyDeaths.get(0).getKey() == tempFriends._attacking && tempFriends._attacking == tempFriends.minions.size() - 1)
-				tempFriends._attacking = 0;
+			for(SimpleEntry<Integer, ArrayList<Deathrattle>> entry : friendlyDeaths) {
+				int _pos = entry.getKey();
+//				Minion friend = tempFriends.minions.get(entry.getKey());
+				
+				if(_pos == tempFriends._attacking && tempFriends._attacking == tempFriends.minions.size() - 1) {
+						tempFriends._attacking = 0;
+				}
+				
+				
+				if(friendlyDeaths.get(0).getKey() == tempFriends._attacking && tempFriends._attacking == tempFriends.minions.size() - 1)
+					tempFriends._attacking = 0;
+			}
 		} else {
 			tempFriends.incAttacking();
 		}
@@ -211,15 +219,32 @@ public class Line {
 		return toRet;
 	}
 	
-	public void summon(Minion toSummon, int _pos, Line from) {
+	
+	public int summon(Minion toSummon, int _pos, Line from) {
 		ArrayList<Minion> list = new ArrayList<Minion>();
 		list.add(toSummon);
-		summon(list, _pos, from);
+		return summon(list, _pos, from, getKhadgarMultiplier(from));
 	}
 	
-	public void summon(ArrayList<Minion> summonList, int _pos, Line from) {
+	public int summon(ArrayList<Minion> summonList, int _pos, Line from) {
+		return summon(summonList, _pos, from, getKhadgarMultiplier(from));
+	}
+	
+	/**
+	 * Processes all of the buffs that ANY GIVEN MINION(S) gets when a minion is summoned, and then
+	 * summons the actual minion(s)
+	 * 
+	 * @param summonList - list of minions to be summoned
+	 * @param _pos       - position to summon minions at
+	 * @param from       - line that the minions are being summoned from (required b/c of The Beast)
+	 * @param khadgar    - used to deal w/ the weird situation w/ Khadgar summoning copies of already buffed minions
+	 * @return
+	 */
+	public int summon(ArrayList<Minion> summonList, int _pos, Line from, int khadgar) {
+		if(khadgar == 0)
+			return 0;
 		if(minions.size() >= 7 || summonList == null || summonList.size() == 0)
-			return;
+			return 0;
 		
 		Minion toSummon = summonList.get(0);
 		if(toSummon.getTribe() == Tribe.Mech || toSummon.getTribe() == Tribe.All) {
@@ -244,15 +269,37 @@ public class Line {
 			}
 		}
 		
-		for(int i = 0; i < 1 * getKhadgarMultiplier(from); i++) {
-			minions.add(Math.min(minions.size(), _pos), summonList.get(i));
+		int toRet = 0;
+		for(Minion m : summonList) {
+			if(minions.size() < 7) {
+				minions.add(Math.min(minions.size(), _pos), m);
+				toRet++;
+			}
+			
+			for(int i = 1; i < khadgar; i++) {
+				ArrayList<Minion> list = new ArrayList<Minion>();
+				list.add(m.clone(m.getBoard(), m.getLine()));
+				toRet += summon(list, _pos, from, 1);
+			}
 		}
+		
+		return toRet;
 	}
 	
+	/**
+	 * Minions getter
+	 * @return - list of minions
+	 */
 	public LinkedList<Minion> getMinions() {
 		return this.minions;
 	}
 	
+	/**
+	 * Returns ONLY the minions adjacent to the given minion
+	 * 
+	 * @param m - minion to get minions adjacent to
+	 * @return  - minions adjacent to m
+	 */
 	public ArrayList<Minion> getAdjMinions(Minion m) {
 		int _ind = this.minions.indexOf(m);
 		if(_ind < 0)
@@ -273,6 +320,13 @@ public class Line {
 		return toRet;
 	}
 	
+	/**
+	 * Returns the number of minions to be summoned according to whether there is a khadgar/gold khadgar
+	 * or not
+	 * 
+	 * @param l - line that is doing the summoning (needed b/c of The Beast)
+	 * @return  - total number of minions to be summoned; [1, 3]
+	 */
 	private int getKhadgarMultiplier(Line l) {
 		int mult = 1;
 		for(Minion m : l.minions) {
@@ -391,9 +445,12 @@ public class Line {
 	
 	public String toString() {
 		String toRet = "";
-		for(Minion m : minions)
-			toRet += "\t" + m.toString();
-		
+		if(minions.size() == 0)
+			toRet += "\t<EMPTY>";
+		else
+			for(Minion m : minions)
+				toRet += "\t" + m.toString();
+			
 		return toRet;
 	}
 	
