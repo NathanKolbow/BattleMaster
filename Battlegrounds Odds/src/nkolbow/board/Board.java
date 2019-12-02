@@ -61,7 +61,7 @@ public class Board {
 			Debug.log("\n\n======== ENEMY ATTACKING FIRST ========", 1);
 			battleRecur(board, false);
 		}
-		
+		 
 		System.out.println("\nBATTLE STATS\n" + "=================================================\n"
 							+ "Total possibilities: \t" + (totalTies + totalWins + totalLosses)
 							+ "\nTotal wins: \t\t" + totalWins + "\t%Chance: ~" + String.format("%.2f", (((double)totalWins*100)/(double)(totalTies+totalWins+totalLosses))) + "%"
