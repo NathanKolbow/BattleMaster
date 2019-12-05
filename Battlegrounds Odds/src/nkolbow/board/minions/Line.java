@@ -1,6 +1,5 @@
 package nkolbow.board.minions;
 
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
@@ -13,12 +12,17 @@ public class Line {
 	 
 	private LinkedList<Minion> minions;
 	private LinkedList<Minion> mechDeathOrder;
+	private RattleList rattles;	// used when deathrattles are being triggered sequentially
+												// probably end up creating a special data structure for this
+												// that properly orders deathrattles when they're added
+	
 	// the index of the minion next to attack
 	public int _attacking = 0;
 	
 	public Line() {
 		minions = new LinkedList<Minion>();
 		mechDeathOrder = new LinkedList<Minion>();
+		rattles = new RattleList();
 	}
 	
 	/**
@@ -68,11 +72,10 @@ public class Line {
 				attacker.takeDamage(target.getAttack(tempEnemies));
 			}
 			
-			ArrayList<SimpleEntry<Integer, ArrayList<Deathrattle>>> enemyDeaths = new ArrayList<SimpleEntry<Integer, ArrayList<Deathrattle>>>();
 			for(Minion m : damagedMinions) {
 				if(m.isDead(tempEnemies)) {
-					enemyDeaths.add(new SimpleEntry<Integer, ArrayList<Deathrattle>>(tempEnemies.minions.indexOf(m), m.getDeathrattles()));
-					
+					for(Deathrattle rattle : m.getDeathrattles())
+						tempEnemies.rattles.add(new RattleEntry(tempEnemies.minions.indexOf(m), rattle, !isFriend)); // pretty sure !isFriend is correct here
 					
 /*					if(m.getEffect() == Effect.MalGanis || m.getEffect() == Effect.Gold_MalGanis) {
 						for(Minion min : tempEnemies.minions) {
@@ -109,12 +112,12 @@ public class Line {
 			// TODO: Implement deathrattles
 			// Dead minions can't be hit by deathrattles, so removing minions from their linked lists then triggering deathrattles
 			// Does that for us implicitly
-			ArrayList<SimpleEntry<Integer, ArrayList<Deathrattle>>> friendly = new ArrayList<SimpleEntry<Integer, ArrayList<Deathrattle>>>();
 			if(attacker.isDead(tempFriends)) {
-				friendly.add(new SimpleEntry<Integer, ArrayList<Deathrattle>>(tempFriends.minions.indexOf(attacker), attacker.getDeathrattles()));
+				for(Deathrattle rattle : attacker.getDeathrattles())
+					tempFriends.rattles.add(new RattleEntry(tempFriends.minions.indexOf(attacker), rattle, isFriend));
 			}
 			
-			ArrayList<Board> toAdd = triggerDeathrattles(friendly, enemyDeaths, newBoard, isFriend);
+			ArrayList<Board> toAdd = triggerDeathrattles(newBoard, isFriend);
 			toRet.addAll(toAdd);
 		}
 		
@@ -131,7 +134,7 @@ public class Line {
 	 * @param deaths - deaths that may or may not have deathrattles to trigger
 	 * @return - all possible board states that emerge
 	 */
-	private ArrayList<Board> triggerDeathrattles(ArrayList<SimpleEntry<Integer, ArrayList<Deathrattle>>> friendlyDeaths, ArrayList<SimpleEntry<Integer, ArrayList<Deathrattle>>> enemyDeaths, Board board, boolean isFriend) {
+	private ArrayList<Board> triggerDeathrattles(Board board, boolean isFriend) {
 		// Game plan: process ALL of the deathrattles in enemyDeaths & friendlyDeaths
 		//			  Trigger deathrattles in a set order
 		// 			  	  - Perhaps change friendlyDeaths/enemyDeaths to firstProcess/secondProcess for progressive processing of deathrattles??
@@ -159,91 +162,304 @@ public class Line {
 		Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 		Line tempEnemies = (isFriend) ? board.getEnemies() : board.getFriends();
 		
+		RattleList friendlyRattles = tempFriends.rattles;
+		RattleList enemyRattles = tempEnemies.rattles;
 		
-		// Rivendare triggers even if he dies w/ deathrattles, so gather that information right at the beginning
-		Effect friendlyRiven = Effect.None;
-		for(Minion m : tempFriends.minions) {
-			if(m.getEffect() == Effect.Baron_Rivendare) {
-				if(friendlyRiven == Effect.None)
-					friendlyRiven = Effect.Baron_Rivendare;
-			} else if(m.getEffect() == Effect.Gold_Baron_Rivendare) {
-				if(friendlyRiven != Effect.Gold_Baron_Rivendare)
-					friendlyRiven = Effect.Gold_Baron_Rivendare;
+		// Absolutely no one died; THIS WILL ALSO BE RUN AT THE VERY END OF RECURSION
+		if((friendlyRattles == null || friendlyRattles.isEmpty()) && (enemyRattles == null || enemyRattles.isEmpty())) {
+			// it probably isn't correct to have this happen
+			tempFriends.incAttacking();
+			
+			ArrayList<Board> toRet = new ArrayList<Board>();
+			toRet.add(board);
+			return toRet;
+		} else {
+			// Rivendare triggers even if he dies w/ deathrattles, so gather that information right at the beginning
+			int friendlyRiven = 1;
+			for(Minion m : tempFriends.minions) {
+				if(m.getEffect() == Effect.Baron_Rivendare) {
+					if(friendlyRiven == 1)
+						friendlyRiven = 2;
+				} else if(m.getEffect() == Effect.Gold_Baron_Rivendare) {
+					if(friendlyRiven != 3)
+						friendlyRiven = 3;
+				}
 			}
-		}
-		
-		Effect enemyRiven = Effect.None;
-		for(Minion m : tempEnemies.minions) {
-			if(m.getEffect() == Effect.Baron_Rivendare) {
-				if(enemyRiven == Effect.None)
-					enemyRiven = Effect.Baron_Rivendare;
-			} else if(m.getEffect() == Effect.Gold_Baron_Rivendare) {
-				if(enemyRiven != Effect.Gold_Baron_Rivendare)
-					enemyRiven = Effect.Gold_Baron_Rivendare;
+			
+			int enemyRiven = 1;
+			for(Minion m : tempEnemies.minions) {
+				if(m.getEffect() == Effect.Baron_Rivendare) {
+					if(enemyRiven == 1)
+						enemyRiven = 2;
+				} else if(m.getEffect() == Effect.Gold_Baron_Rivendare) {
+					if(enemyRiven != 3)
+						enemyRiven = 3;
+				}
 			}
-		}
-		
-		
-		if(friendlyDeaths != null && friendlyDeaths.size() > 0) {
-			for(SimpleEntry<Integer, ArrayList<Deathrattle>> entry : friendlyDeaths) {
-				int _pos = entry.getKey();
-//				Minion friend = tempFriends.minions.get(entry.getKey());
+			
+			ArrayList<Board> outcomes = new ArrayList<Board>();
+			ArrayList<Board> tempOutcomes = new ArrayList<Board>();
+			tempOutcomes.add(board); // priming the pump
+			
+			// RattleLists make this shit easy
+			// Friends first
+			//while(!friendlyRattles.isEmpty() && friendlyRattles.peak().getTier() == 1) {
 				
-				if(_pos == tempFriends._attacking && tempFriends._attacking == tempFriends.minions.size() - 1) {
-						tempFriends._attacking = 0;
+			for(int i = 0; i < friendlyRattles.localSize(); i++) {
+				outcomes = tempOutcomes;
+				tempOutcomes = new ArrayList<Board>();
+				
+				for(Board b : outcomes) {
+					tempOutcomes.addAll(rattle(b, isFriend, friendlyRiven, enemyRiven));
 				}
 				
+				Debug.log("isEmpty: " + friendlyRattles.isEmpty()
+							+ "\nsize: " + friendlyRattles.localSize(), 1);
+
+			}
+			while(!enemyRattles.isEmpty() && enemyRattles.peak().getTier() == 1) {
+				outcomes = tempOutcomes;
+				tempOutcomes = new ArrayList<Board>();
 				
-				if(friendlyDeaths.get(0).getKey() == tempFriends._attacking && tempFriends._attacking == tempFriends.minions.size() - 1)
-					tempFriends._attacking = 0;
+				for(Board b : outcomes) {
+					tempOutcomes.addAll(rattle(b, !isFriend, friendlyRiven, enemyRiven));
+				}
 			}
-		} else {
-			tempFriends.incAttacking();
-		}
-		
-		for(SimpleEntry<Integer, ArrayList<Deathrattle>> enemy : enemyDeaths) {
-			int _eAttacking = tempEnemies._attacking;
 			
-			if(_eAttacking > enemy.getKey()) {
-				tempEnemies.decAttacking();
-			} else if(enemy.getKey() == _eAttacking) {
-				if(_eAttacking == tempEnemies.minions.size() - 1)
-					tempEnemies._attacking = 0;
-				else
-					tempEnemies.decAttacking();
-			}
+			return tempOutcomes;
 		}
-		
-		
-		ArrayList<Minion> toRemove = new ArrayList<Minion>();
-		for(SimpleEntry<Integer, ArrayList<Deathrattle>> m : friendlyDeaths) {
-			toRemove.add(tempFriends.minions.get(m.getKey()));
-		}
-		for(Minion m : toRemove) {
-			// Add mechs for Kangor's last
-			if(m.getTribe() == Tribe.Mech || m.getTribe() == Tribe.All)
-				tempFriends.mechDeathOrder.addLast(m.clone(board, tempFriends));
-
-			tempFriends.minions.remove(m);
-		}
-		
-		toRemove = new ArrayList<Minion>();
-		for(SimpleEntry<Integer, ArrayList<Deathrattle>> m : enemyDeaths) {
-			toRemove.add(tempEnemies.minions.get(m.getKey()));
-		}
-		for(Minion m : toRemove) {
-			// Add mechs for Kangor's last
-			if(m.getTribe() == Tribe.Mech || m.getTribe() == Tribe.All)
-				tempEnemies.mechDeathOrder.addLast(m.clone(board, tempEnemies));
-
-			tempEnemies.minions.remove(m);
-		}
-			
-		ArrayList<Board> toRet = new ArrayList<Board>();
-		toRet.add(board);
-		return toRet;
 	}
 	
+	private ArrayList<Board> rattle(Board board, boolean isFriend, int friendlyRiven, int enemyRiven) {
+		RattleEntry rattle = (isFriend) ? board.getFriends().rattles.pop() : board.getEnemies().rattles.pop();
+		
+		if(rattle.getRattle() != Deathrattle.Process && rattle.getRattle() != Deathrattle.None)
+			Debug.log("List size: " + board.getFriends().rattles.localSize()
+					+ "\n\tRattle: " + rattle.getRattle().toString(), 1);
+		int riven = (isFriend) ? friendlyRiven : enemyRiven; // not sure if this is the correct way to pick the riven
+		
+		switch(rattle.getRattle()) {
+		// these first 4 only have 1 possible outcome, so we don't bother with a for loop
+		case Process: {
+			Debug.log("Processing...", 1);
+			// THIS SHOULD ONLY EVER RETURN 1 BOARD; NAMELY THE BOARD GIVEN ABOVE, JUST WITHOUT THE DEAD MINIONS ON IT
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			Line tempEnemies = (isFriend) ? board.getEnemies() : board.getFriends();
+			
+			for(Minion m : tempFriends.minions) {
+				if(m.isDead(tempFriends)) {
+					int _ind = tempFriends.minions.indexOf(m);
+					if(tempFriends._attacking > _ind) {
+						tempFriends._attacking--;
+						tempFriends.minions.remove(m);
+					}
+				}
+			}
+			if(tempFriends._attacking == tempFriends.minions.size())
+				tempFriends._attacking = 0;
+			else if(tempFriends._attacking > tempFriends.minions.size())
+				Debug.log("I didn't think it was possible to reach this case. Eek.", 3);
+			
+			
+			for(Minion m : tempEnemies.minions) {
+				if(m.isDead(tempEnemies)) {
+					int _ind = tempEnemies.minions.indexOf(m);
+					if(tempEnemies._attacking > _ind) {
+						tempEnemies._attacking--;
+						tempEnemies.minions.remove(m);
+					}
+				}
+			}
+			if(tempEnemies._attacking == tempEnemies.minions.size())
+				tempEnemies._attacking = 0;
+			if(tempEnemies._attacking > tempFriends.minions.size())
+				Debug.log("I didn't think it was possible to reach this case. Eek.", 3);
+			
+			
+			friendlyRiven = 1;
+			for(Minion m : tempFriends.minions) {
+				if(m.getEffect() == Effect.Baron_Rivendare) {
+					if(friendlyRiven == 1)
+						friendlyRiven = 2;
+				} else if(m.getEffect() == Effect.Gold_Baron_Rivendare) {
+					if(friendlyRiven != 3)
+						friendlyRiven = 3;
+				}
+			}
+			
+			enemyRiven = 1;
+			for(Minion m : tempEnemies.minions) {
+				if(m.getEffect() == Effect.Baron_Rivendare) {
+					if(enemyRiven == 1)
+						enemyRiven = 2;
+				} else if(m.getEffect() == Effect.Gold_Baron_Rivendare) {
+					if(enemyRiven != 3)
+						enemyRiven = 3;
+				}
+			}
+			
+			
+			return rattle(board, isFriend, friendlyRiven, enemyRiven);
+		}
+		case Spawn_of_NZoth: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			for(int i = 0; i < riven; i++) {
+				for(Minion m : tempFriends.getAliveMinions()) {
+					m.setBaseAttack(m.getBaseAttack() + 1);
+					m.setBaseHealth(m.getBaseHealth() + 1);
+				}
+			}
+			
+			ArrayList<Board> toRet = new ArrayList<Board>();
+			toRet.add(board);
+			return toRet;
+		}
+		case Gold_Spawn_of_NZoth: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			for(int i = 0; i < riven; i++) {
+				for(Minion m : tempFriends.getAliveMinions()) {
+					m.setBaseAttack(m.getBaseAttack() + 2);
+					m.setBaseHealth(m.getBaseHealth() + 2);
+				}
+			}
+
+			ArrayList<Board> toRet = new ArrayList<Board>();
+			toRet.add(board);
+			return toRet;
+		}
+		case Goldrinn_the_Great_Wolf: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			for(int i = 0; i < riven; i++) {
+				for(Minion m : tempFriends.getAliveMinions()) {
+					if(m.getTribe() == Tribe.Beast) {
+						m.setBaseAttack(m.getBaseAttack() + 4);
+						m.setBaseHealth(m.getBaseHealth() + 4);
+					}
+				}
+			}
+			
+			ArrayList<Board> toRet = new ArrayList<Board>();
+			toRet.add(board);
+			return toRet;
+		}
+		case Gold_Goldrinn_the_Great_Wolf: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			for(int i = 0; i < riven; i++) {
+				for(Minion m : tempFriends.getAliveMinions()) {
+					if(m.getTribe() == Tribe.Beast) {
+						m.setBaseAttack(m.getBaseAttack() + 8);
+						m.setBaseHealth(m.getBaseHealth() + 8);
+					}
+				}
+			}
+			
+			ArrayList<Board> toRet = new ArrayList<Board>();
+			toRet.add(board);
+			return toRet;
+		}
+		case Tortollan_Shellraiser: {
+			int iters = (isFriend) ? board.getFriends().getAliveMinions().size() : board.getEnemies().getAliveMinions().size();
+			ArrayList<Board> toRet = new ArrayList<Board>();
+			
+			for(int i = 0; i < iters; i++) {
+				Board newBoard = board.clone();
+				
+				Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+				Minion toBuff = tempFriends.getAliveMinions().get(i);
+				toBuff.setBaseAttack(toBuff.getBaseAttack() + 1);
+				toBuff.setBaseHealth(toBuff.getBaseHealth() + 1);
+				
+				toRet.add(newBoard);
+			}
+			
+			return toRet;
+		}
+		case None: {
+			Debug.log("NONE", 1);
+			ArrayList<Board> toRet = new ArrayList<Board>();
+			toRet.add(board);
+			return toRet;
+		}
+		default:
+			Debug.log("Something TERRIBLE went wrong with deathrattles.", 3);
+			return null;
+		}
+		
+		
+	}
+	
+		// Legacy code: BEFORE deathrattles were implemented, this was the _attacking incrementation/decrementation system
+//		if(friendlyDeaths != null && friendlyDeaths.size() > 0) {
+//			for(SimpleEntry<Integer, ArrayList<Deathrattle>> entry : friendlyDeaths) {
+//				int _pos = entry.getKey();
+//				
+//				if(_pos == tempFriends._attacking && tempFriends._attacking == tempFriends.minions.size() - 1) {
+//						tempFriends._attacking = 0;
+//				}
+//				
+//				
+//				if(friendlyDeaths.get(0).getKey() == tempFriends._attacking && tempFriends._attacking == tempFriends.minions.size() - 1)
+//					tempFriends._attacking = 0;
+//			}
+//		} else {
+//			tempFriends.incAttacking();
+//		}
+//		
+//		for(SimpleEntry<Integer, ArrayList<Deathrattle>> enemy : enemyDeaths) {
+//			int _eAttacking = tempEnemies._attacking;
+//			
+//			if(_eAttacking > enemy.getKey()) {
+//				tempEnemies.decAttacking();
+//			} else if(enemy.getKey() == _eAttacking) {
+//				if(_eAttacking == tempEnemies.minions.size() - 1)
+//					tempEnemies._attacking = 0;
+//				else
+//					tempEnemies.decAttacking();
+//			}
+//		}
+//		
+//		
+//		ArrayList<Minion> toRemove = new ArrayList<Minion>();
+//		for(SimpleEntry<Integer, ArrayList<Deathrattle>> m : friendlyDeaths) {
+//			toRemove.add(tempFriends.minions.get(m.getKey()));
+//		}
+//		for(Minion m : toRemove) {
+//			// Add mechs for Kangor's last
+//			if(m.getTribe() == Tribe.Mech || m.getTribe() == Tribe.All)
+//				tempFriends.mechDeathOrder.addLast(m.clone(board, tempFriends));
+//
+//			tempFriends.minions.remove(m);
+//		}
+//		
+//		toRemove = new ArrayList<Minion>();
+//		for(SimpleEntry<Integer, ArrayList<Deathrattle>> m : enemyDeaths) {
+//			toRemove.add(tempEnemies.minions.get(m.getKey()));
+//		}
+//		for(Minion m : toRemove) {
+//			// Add mechs for Kangor's last
+//			if(m.getTribe() == Tribe.Mech || m.getTribe() == Tribe.All)
+//				tempEnemies.mechDeathOrder.addLast(m.clone(board, tempEnemies));
+//
+//			tempEnemies.minions.remove(m);
+//		}
+//			
+//		ArrayList<Board> toRet = new ArrayList<Board>();
+//		toRet.add(board);
+//		return toRet;
+//	}
+	
+	public ArrayList<Minion> getAliveMinions() {
+		ArrayList<Minion> toRet = new ArrayList<Minion>();
+		for(Minion m : minions)
+			if(!m.isDead(this))
+				toRet.add(m);
+		
+		return toRet;
+	}
 	
 	public int summon(Minion toSummon, int _pos, Line from) {
 		ArrayList<Minion> list = new ArrayList<Minion>();
@@ -268,7 +484,7 @@ public class Line {
 	public int summon(ArrayList<Minion> summonList, int _pos, Line from, int khadgar) {
 		if(khadgar == 0)
 			return 0;
-		if(minions.size() >= 7 || summonList == null || summonList.size() == 0)
+		if(getAliveMinions().size() >= 7 || summonList == null || summonList.size() == 0)
 			return 0;
 		
 		Minion toSummon = summonList.get(0);
@@ -364,9 +580,9 @@ public class Line {
 		return mult;
 	}
 	
-	private void decAttacking() {
+/*	private void decAttacking() {
 		_attacking = Math.max(_attacking - 1, 0);
-	}
+	}*/
 	
 	private void incAttacking() {
 		_attacking = (_attacking + 1) % minions.size();
@@ -410,6 +626,7 @@ public class Line {
 		for(Minion m : mechDeathOrder)
 			toRet.mechDeathOrder.addLast(m.clone(b, toRet));
 		
+		toRet.rattles = rattles.clone();
 		toRet._attacking = this._attacking;
 		
 		return toRet;

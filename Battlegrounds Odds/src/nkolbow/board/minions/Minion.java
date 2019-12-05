@@ -3,7 +3,6 @@ package nkolbow.board.minions;
 import java.util.ArrayList;
 
 import nkolbow.board.Board;
-import nkolbow.debug.Debug;
 
 public class Minion {
 	

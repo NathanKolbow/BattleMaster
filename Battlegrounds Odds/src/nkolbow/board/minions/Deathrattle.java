@@ -11,6 +11,8 @@ public enum Deathrattle {
 	Gold_Mounted_Raptor, Gold_Rat_Pack, Gold_Spawn_of_NZoth, Gold_Infested_Wolf, Gold_Piloted_Shredder, 
 	Gold_Replicating_Menace, Gold_Tortollan_Shellraiser, Gold_Piloted_Sky_Golem, Gold_The_Beast, Gold_Goldrinn_the_Great_Wolf, 
 	Gold_Mechano_egg, Gold_Sated_Threshadon, Gold_Savannah_Highmane, Gold_Voidlord, Gold_Ghastcoiler, Gold_Kangors_Apprentice, 
-	Gold_Sneeds_Old_Shredder
+	Gold_Sneeds_Old_Shredder,
 	
+	None,   // special deathrattle code used by RattleList to signal the end of all deathrattles
+	Process // special deathrattle code used by RattleList & deathrattle processing
 }

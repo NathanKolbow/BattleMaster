@@ -1,7 +1,6 @@
 package nkolbow.main;
 
 import nkolbow.board.Board;
-import nkolbow.board.FullBoardException;
 
 public class Driver {
 
@@ -9,6 +8,36 @@ public class Driver {
 		Board b = new Board(5, 2);
 		
 		try {
+			// Super preliminary deathrattle testing
+			b.addMinion("spawn..1.1.1;;h;", true, Integer.MAX_VALUE);
+			b.addMinion("tabby.b.1.1.1;;;", true, Integer.MAX_VALUE);
+			
+			b.addMinion("tabby.b.1.1.1;;;", false, Integer.MAX_VALUE);
+			
+			
+			
+			
+			
+/*			// Testing RattleList
+			RattleList list = new RattleList();
+			list.add(Deathrattle.Gold_Kaboom_Bot);
+			list.add(Deathrattle.Gold_Piloted_Shredder);
+			list.add(Deathrattle.Gold_Kaboom_Bot);
+			list.add(Deathrattle.Ghastcoiler);
+			list.add(Deathrattle.Gold_Goldrinn_the_Great_Wolf);
+			list.add(Deathrattle.Ghastcoiler);
+			
+			list.addDepth();
+			
+			list.add(Deathrattle.Gold_Kaboom_Bot);
+			list.add(Deathrattle.Gold_Selfless_Hero);
+			list.add(Deathrattle.Goldrinn_the_Great_Wolf);
+			list.add(Deathrattle.Gold_The_Beast);
+			
+			list.pop();
+			System.out.println(list.toString());					*/
+			
+			
 /*			b.addMinion("foe.M.21.22.6;c;;", true, Integer.MAX_VALUE);
 			b.addMinion("cobalt.M.30.23.3;d;;", true, Integer.MAX_VALUE);
 			b.addMinion("murloc.m.17.20.1;pd;;", true, Integer.MAX_VALUE);
@@ -23,7 +52,7 @@ public class Driver {
 			b.getEnemies()._attacking = 1;										*/
 			
 			
-			// Kripparian double unlucky first battle
+/*			// Kripparian double unlucky first battle
 			b.addMinion("amalgom.a.3.4.2;;;", true, Integer.MAX_VALUE);
 			b.addMinion("amalgom2.a.3.4.2;;;", true, Integer.MAX_VALUE);
 			b.addMinion("tabby.b.3.3.1;;;", true, Integer.MAX_VALUE);
@@ -35,7 +64,7 @@ public class Driver {
 			b.addMinion("rover.M.4.6.4;;;l", false, Integer.MAX_VALUE);
 			b.addMinion("leaper.M.3.3.2;;;", false, Integer.MAX_VALUE);
 			b.addMinion("pack_leader..3.3.3;;;g", false, Integer.MAX_VALUE);
-			b.addMinion("tide.m.2.1.1;;;", false, Integer.MAX_VALUE);			
+			b.addMinion("tide.m.2.1.1;;;", false, Integer.MAX_VALUE);			*/
 			
 			// second battle
 //			b.addMinion(minion, isFriend, position);
@@ -94,7 +123,7 @@ public class Driver {
 //			b.addMinion("battle.demon.6.37.1;;;", false, Integer.MAX_VALUE);
 //			b.addMinion("void.demon.3.9.1;;;", false, Integer.MAX_VALUE);
 //			b.addMinion("zap..7.10.1;;;", false, Integer.MAX_VALUE);
-		} catch (FullBoardException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
