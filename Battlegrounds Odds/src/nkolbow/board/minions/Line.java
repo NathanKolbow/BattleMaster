@@ -117,6 +117,7 @@ public class Line {
 					tempFriends.rattles.add(new RattleEntry(tempFriends.minions.indexOf(attacker), rattle, isFriend));
 			}
 			
+			
 			ArrayList<Board> toAdd = triggerDeathrattles(newBoard, isFriend);
 			toRet.addAll(toAdd);
 		}
@@ -166,14 +167,14 @@ public class Line {
 		RattleList enemyRattles = tempEnemies.rattles;
 		
 		// Absolutely no one died; THIS WILL ALSO BE RUN AT THE VERY END OF RECURSION
-		if((friendlyRattles == null || friendlyRattles.isEmpty()) && (enemyRattles == null || enemyRattles.isEmpty())) {
+/*		if((friendlyRattles == null || friendlyRattles.isEmpty()) && (enemyRattles == null || enemyRattles.isEmpty())) {
 			// it probably isn't correct to have this happen
 			tempFriends.incAttacking();
 			
 			ArrayList<Board> toRet = new ArrayList<Board>();
 			toRet.add(board);
 			return toRet;
-		} else {
+		} else {*/
 			// Rivendare triggers even if he dies w/ deathrattles, so gather that information right at the beginning
 			int friendlyRiven = 1;
 			for(Minion m : tempFriends.minions) {
@@ -201,11 +202,28 @@ public class Line {
 			ArrayList<Board> tempOutcomes = new ArrayList<Board>();
 			tempOutcomes.add(board); // priming the pump
 			
-			// RattleLists make this shit easy
-			// Friends first
-			//while(!friendlyRattles.isEmpty() && friendlyRattles.peak().getTier() == 1) {
+			
+			// friends first
+			 
+			/* 
+			 * README ::: friendlyRattles and enemyRattles SHALLOWEST LIST will NEVER be changed past this point,
+			 *			  so we can safely iterate through them without fear of them changing in other iterations midway
+			 *			  through, then we can just call triggerDeathrattles(...) again on all the outcome boards
+			 *			  and continue infinitely, yippee, easy!!
+			 */
+			while(friendlyRattles.peak().getRattle() != Deathrattle.None) {
+				outcomes = tempOutcomes;
+				tempOutcomes = new ArrayList<Board>();
 				
-			for(int i = 0; i < friendlyRattles.localSize(); i++) {
+				for(Board b : outcomes) {
+					tempOutcomes.addAll(rattle(b, isFriend, friendlyRiven, enemyRiven));
+				}
+
+				friendlyRattles.pop(); // have to do this so that we don't get infinite looped
+			}
+			
+			
+			while(enemyRattles.peak().getRattle() != Deathrattle.None) {
 				outcomes = tempOutcomes;
 				tempOutcomes = new ArrayList<Board>();
 				
@@ -213,48 +231,55 @@ public class Line {
 					tempOutcomes.addAll(rattle(b, isFriend, friendlyRiven, enemyRiven));
 				}
 				
-				Debug.log("isEmpty: " + friendlyRattles.isEmpty()
-							+ "\nsize: " + friendlyRattles.localSize(), 1);
-
-			}
-			while(!enemyRattles.isEmpty() && enemyRattles.peak().getTier() == 1) {
-				outcomes = tempOutcomes;
-				tempOutcomes = new ArrayList<Board>();
-				
-				for(Board b : outcomes) {
-					tempOutcomes.addAll(rattle(b, !isFriend, friendlyRiven, enemyRiven));
-				}
+				enemyRattles.pop();
 			}
 			
+			for(Board b : tempOutcomes) {
+				if(b.getFriends().rattles.depth.size() == 0)
+					b.getFriends().rattles.addDepth();
+				if(b.getEnemies().rattles.depth.size() == 0)
+					b.getEnemies().rattles.addDepth();
+			}
 			return tempOutcomes;
-		}
+//		}
 	}
 	
 	private ArrayList<Board> rattle(Board board, boolean isFriend, int friendlyRiven, int enemyRiven) {
-		RattleEntry rattle = (isFriend) ? board.getFriends().rattles.pop() : board.getEnemies().rattles.pop();
+		board = board.clone();
 		
-		if(rattle.getRattle() != Deathrattle.Process && rattle.getRattle() != Deathrattle.None)
-			Debug.log("List size: " + board.getFriends().rattles.localSize()
-					+ "\n\tRattle: " + rattle.getRattle().toString(), 1);
+		RattleEntry rattle = (isFriend) ? board.getFriends().rattles.pop() : board.getEnemies().rattles.pop();
 		int riven = (isFriend) ? friendlyRiven : enemyRiven; // not sure if this is the correct way to pick the riven
 		
 		switch(rattle.getRattle()) {
 		// these first 4 only have 1 possible outcome, so we don't bother with a for loop
 		case Process: {
-			Debug.log("Processing...", 1);
+			Debug.log("Processing... " + isFriend, 1);
+			
+			LinkedList<RattleEntry> newFriendlyDeaths = new LinkedList<RattleEntry>();
+			LinkedList<RattleEntry> newEnemyDeaths = new LinkedList<RattleEntry>();
+			
 			// THIS SHOULD ONLY EVER RETURN 1 BOARD; NAMELY THE BOARD GIVEN ABOVE, JUST WITHOUT THE DEAD MINIONS ON IT
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 			Line tempEnemies = (isFriend) ? board.getEnemies() : board.getFriends();
 			
+			boolean incAttacking = false;
 			for(Minion m : tempFriends.minions) {
+				int _ind = tempFriends.minions.indexOf(m);
 				if(m.isDead(tempFriends)) {
-					int _ind = tempFriends.minions.indexOf(m);
 					if(tempFriends._attacking > _ind) {
 						tempFriends._attacking--;
-						tempFriends.minions.remove(m);
 					}
+					
+					for(Deathrattle r : m.getDeathrattles())
+						newFriendlyDeaths.add(new RattleEntry(_ind, r, isFriend));
+
+					tempFriends.minions.remove(m);
+				} else if(_ind == tempFriends._attacking) {
+					incAttacking = true;
 				}
 			}
+			if(incAttacking) tempFriends.incAttacking();
+			
 			if(tempFriends._attacking == tempFriends.minions.size())
 				tempFriends._attacking = 0;
 			else if(tempFriends._attacking > tempFriends.minions.size())
@@ -266,13 +291,18 @@ public class Line {
 					int _ind = tempEnemies.minions.indexOf(m);
 					if(tempEnemies._attacking > _ind) {
 						tempEnemies._attacking--;
-						tempEnemies.minions.remove(m);
 					}
+					
+					int _min = tempEnemies.minions.indexOf(m);
+					for(Deathrattle r : m.getDeathrattles())
+						newEnemyDeaths.add(new RattleEntry(_min, r, isFriend));
+					
+					tempEnemies.minions.remove(m);
 				}
 			}
 			if(tempEnemies._attacking == tempEnemies.minions.size())
 				tempEnemies._attacking = 0;
-			if(tempEnemies._attacking > tempFriends.minions.size())
+			if(tempEnemies._attacking > tempEnemies.minions.size())
 				Debug.log("I didn't think it was possible to reach this case. Eek.", 3);
 			
 			
@@ -298,7 +328,6 @@ public class Line {
 				}
 			}
 			
-			
 			return rattle(board, isFriend, friendlyRiven, enemyRiven);
 		}
 		case Spawn_of_NZoth: {
@@ -313,6 +342,9 @@ public class Line {
 			
 			ArrayList<Board> toRet = new ArrayList<Board>();
 			toRet.add(board);
+			
+			Debug.log("Spawn triggered", 1);
+			
 			return toRet;
 		}
 		case Gold_Spawn_of_NZoth: {

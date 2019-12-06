@@ -8,14 +8,12 @@ public class Driver {
 		Board b = new Board(5, 2);
 		
 		try {
+
 			// Super preliminary deathrattle testing
-			b.addMinion("spawn..1.1.1;;h;", true, Integer.MAX_VALUE);
-			b.addMinion("tabby.b.1.1.1;;;", true, Integer.MAX_VALUE);
+			b.addMinion("spawn..1.2.1;t;h;", true, Integer.MAX_VALUE);
+			b.addMinion("tabby.b.1.5.1;;;", true, Integer.MAX_VALUE);
 			
-			b.addMinion("tabby.b.1.1.1;;;", false, Integer.MAX_VALUE);
-			
-			
-			
+			b.addMinion("tabby.b.1.5.1;;;", false, Integer.MAX_VALUE);
 			
 			
 /*			// Testing RattleList

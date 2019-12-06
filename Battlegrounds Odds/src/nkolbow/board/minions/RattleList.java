@@ -4,11 +4,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import nkolbow.debug.Debug;
-
 public class RattleList implements Iterable<RattleEntry> {
 
-	private LinkedList<LinkedList<RattleEntry>> depth;
+	public LinkedList<LinkedList<RattleEntry>> depth;
 	
 	public LinkedList<RattleEntry> rattles;
 	
@@ -27,9 +25,15 @@ public class RattleList implements Iterable<RattleEntry> {
 		depth.add(new LinkedList<RattleEntry>());
 	}
 	
+	public void addAll(int _pos, List<Deathrattle> rattles, boolean isFriend) {
+		for(Deathrattle r : rattles)
+			add(new RattleEntry(_pos, r, isFriend));
+	}
+	
 	public void addAll(List<RattleEntry> rattles) {
 		for(RattleEntry toAdd : rattles) {
-			add(toAdd);
+			if(toAdd.getRattle() != Deathrattle.None && toAdd.getRattle() != Deathrattle.Process)
+				add(toAdd);
 		}
 	}
 	
@@ -80,23 +84,45 @@ public class RattleList implements Iterable<RattleEntry> {
 	}
 	
 	public RattleEntry pop() {
-		
+		if(rattles == null)
+			return new RattleEntry(-1, Deathrattle.None, false);
+		if(rattles.size() == 0) {
+			if(depth.size() <= 1) {
+				rattles = null;
+				depth = new LinkedList<LinkedList<RattleEntry>>();
+			} else {
+				depth.removeFirst();
+				rattles = depth.get(0);
+			}
+			
+			return new RattleEntry(-1, Deathrattle.Process, false);
+		} else {
+			return rattles.removeFirst();
+		}
+	}
+	
+	public int localSize() {
+		if(rattles == null) {
+			return 0;
+		} else {
+			return rattles.size();
+		}
 	}
 	
 	public RattleList clone() {
 		RattleList toRet = new RattleList();
 		
-		for(LinkedList<RattleEntry> list : depth) {
-			LinkedList<RattleEntry> newList = new LinkedList<RattleEntry>();
-			for(RattleEntry e : list)
-				newList.add(e.clone());
-			
-			toRet.addAll(newList);
-			toRet.addDepth();
+		LinkedList<LinkedList<RattleEntry>> newDepth = new LinkedList<LinkedList<RattleEntry>>();
+		for(int i = 0; i < depth.size(); i++) {
+			newDepth.add(new LinkedList<RattleEntry>());
+			for(RattleEntry e : depth.get(i)) {
+				newDepth.get(i).add(e.clone());
+			}
 		}
-		toRet.depth.removeLast(); // b/c of the above for loop
-		
-		if(toRet.depth.size() != 0)
+		toRet.depth = newDepth;
+		if(toRet.depth.size() == 0)
+			toRet.rattles = null;
+		else
 			toRet.rattles = toRet.depth.get(0);
 		
 		return toRet;
@@ -120,43 +146,6 @@ public class RattleList implements Iterable<RattleEntry> {
 	@Override
 	public Iterator<RattleEntry> iterator() {
 		return rattles.iterator();
-	}
-	
-}
-
-class RattleEntry {
-	
-	private Deathrattle rattle;
-	private int pos;
-	private boolean isFriend;
-	
-	public RattleEntry(int pos, Deathrattle rattle, boolean isFriend) {
-		this.rattle = rattle;
-		this.pos = pos;
-		this.isFriend = isFriend;
-	}
-	
-	public Deathrattle getRattle() { return rattle; }
-	public int getPos() { return this.pos; }
-	public boolean getFriend() { return this.isFriend; }
-	
-	public RattleEntry clone() {
-		return new RattleEntry(pos, rattle, isFriend);
-	}
-	
-	public String toString() {
-		return rattle.toString();
-	}
-	
-	public int getTier() {
-		if(rattle == Deathrattle.Process || rattle == Deathrattle.None)
-			return 4;
-		else if(rattle == Deathrattle.Gold_Spawn_of_NZoth || rattle == Deathrattle.Spawn_of_NZoth || rattle == Deathrattle.Goldrinn_the_Great_Wolf || rattle == Deathrattle.Gold_Goldrinn_the_Great_Wolf
-				|| rattle == Deathrattle.Gold_Selfless_Hero || rattle == Deathrattle.Selfless_Hero || rattle == Deathrattle.Tortollan_Shellraiser || rattle == Deathrattle.Gold_Tortollan_Shellraiser)
-			return 1;
-		else if(rattle == Deathrattle.Gold_Kaboom_Bot || rattle == Deathrattle.Kaboom_Bot)
-			return 2;
-		return 3;
 	}
 	
 }

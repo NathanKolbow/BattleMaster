@@ -222,8 +222,12 @@ public class Minion {
 	 * @return - deep clone
 	 */
 	public Minion clone(Board b, Line l) {
+		ArrayList<Deathrattle> newRattles = new ArrayList<Deathrattle>();
+		for(Deathrattle rattle : deathrattles)
+			newRattles.add(rattle);
+		
 		Minion toRet = new Minion(new String(this.name), this.tribe, l, this.attack, this.health, this.maxHealth, this.stars, b, this.effect,
-									this.hasDivine, this.hasPoison, this.hasCleave, this.hasTaunt, (ArrayList<Deathrattle>) this.deathrattles.clone());
+									this.hasDivine, this.hasPoison, this.hasCleave, this.hasTaunt, newRattles);
 
 		return toRet;
 	}
