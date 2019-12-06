@@ -228,10 +228,10 @@ public class Line {
 				tempOutcomes = new ArrayList<Board>();
 				
 				for(Board b : outcomes) {
-					tempOutcomes.addAll(rattle(b, isFriend, friendlyRiven, enemyRiven));
+					tempOutcomes.addAll(rattle(b, !isFriend, friendlyRiven, enemyRiven));
 				}
 				
-				enemyRattles.pop();
+				Debug.log("Enemy popped: " + enemyRattles.pop(), 1);
 			}
 			
 			for(Board b : tempOutcomes) {
@@ -263,21 +263,26 @@ public class Line {
 			Line tempEnemies = (isFriend) ? board.getEnemies() : board.getFriends();
 			
 			boolean incAttacking = false;
+			LinkedList<Minion> toRemove = new LinkedList<Minion>();
+			int toDec = 0;
+			
 			for(Minion m : tempFriends.minions) {
 				int _ind = tempFriends.minions.indexOf(m);
 				if(m.isDead(tempFriends)) {
 					if(tempFriends._attacking > _ind) {
-						tempFriends._attacking--;
+						toDec++;
 					}
 					
 					for(Deathrattle r : m.getDeathrattles())
 						newFriendlyDeaths.add(new RattleEntry(_ind, r, isFriend));
 
-					tempFriends.minions.remove(m);
+					toRemove.add(m);
 				} else if(_ind == tempFriends._attacking) {
 					incAttacking = true;
 				}
 			}
+			tempFriends.minions.removeAll(toRemove);
+			tempFriends._attacking -= toDec;
 			if(incAttacking) tempFriends.incAttacking();
 			
 			if(tempFriends._attacking == tempFriends.minions.size())
@@ -286,20 +291,24 @@ public class Line {
 				Debug.log("I didn't think it was possible to reach this case. Eek.", 3);
 			
 			
+			toRemove = new LinkedList<Minion>();
+			toDec = 0;
 			for(Minion m : tempEnemies.minions) {
 				if(m.isDead(tempEnemies)) {
 					int _ind = tempEnemies.minions.indexOf(m);
 					if(tempEnemies._attacking > _ind) {
-						tempEnemies._attacking--;
+						toDec++;
 					}
 					
 					int _min = tempEnemies.minions.indexOf(m);
 					for(Deathrattle r : m.getDeathrattles())
 						newEnemyDeaths.add(new RattleEntry(_min, r, isFriend));
 					
-					tempEnemies.minions.remove(m);
+					toRemove.add(m);
 				}
 			}
+			tempEnemies._attacking -= toDec;
+			tempEnemies.minions.removeAll(toRemove);
 			if(tempEnemies._attacking == tempEnemies.minions.size())
 				tempEnemies._attacking = 0;
 			if(tempEnemies._attacking > tempEnemies.minions.size())

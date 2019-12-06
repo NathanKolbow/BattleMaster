@@ -9,11 +9,21 @@ public class Driver {
 		
 		try {
 
-			// Super preliminary deathrattle testing
-			b.addMinion("spawn..1.2.1;t;h;", true, Integer.MAX_VALUE);
-			b.addMinion("tabby.b.1.5.1;;;", true, Integer.MAX_VALUE);
+/*			// Super preliminary deathrattle testing
+			b.addMinion("spawn..2.2.1;t;h;", true, Integer.MAX_VALUE);
+			b.addMinion("spawn..2.2.1;t;h;", true, Integer.MAX_VALUE);
+
+			b.addMinion("spawn..2.2.1;t;h;", false, Integer.MAX_VALUE);
+			b.addMinion("spawn..2.2.1;t;h;", false, Integer.MAX_VALUE);
+	*/		
 			
-			b.addMinion("tabby.b.1.5.1;;;", false, Integer.MAX_VALUE);
+			// Testerinos
+			b.addMinion("tabby.b.1.5.1;;;", true, Integer.MAX_VALUE);
+
+			b.addMinion("tabby.b.1.4.1;;;", false, Integer.MAX_VALUE);
+			b.addMinion("notTabby.a.1.1.1;p;;", false, Integer.MAX_VALUE);
+			
+			
 			
 			
 /*			// Testing RattleList
