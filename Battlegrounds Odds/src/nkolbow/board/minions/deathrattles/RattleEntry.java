@@ -1,23 +1,28 @@
-package nkolbow.board.minions;
+package nkolbow.board.minions.deathrattles;
+
+import nkolbow.board.Board;
+import nkolbow.board.Line;
+import nkolbow.board.minions.Minion;
 
 public class RattleEntry {
 	
 	private Deathrattle rattle;
 	private int pos;
-	private boolean isFriend;
+	private Minion source;
 	
-	public RattleEntry(int pos, Deathrattle rattle, boolean isFriend) {
+	public RattleEntry(int pos, Deathrattle rattle, Minion source) {
 		this.rattle = rattle;
 		this.pos = pos;
-		this.isFriend = isFriend;
+		this.source = source;
 	}
 	
 	public Deathrattle getRattle() { return rattle; }
 	public int getPos() { return this.pos; }
-	public boolean getFriend() { return this.isFriend; }
+	public Minion getSource() { return this.source; }
+	public void setSource(Minion m) { this.source = m; }
 	
-	public RattleEntry clone() {
-		return new RattleEntry(pos, rattle, isFriend);
+	public RattleEntry clone(Board b, Line l) {
+		return new RattleEntry(pos, rattle, source.clone(b, l));
 	}
 	
 	public String toString() {

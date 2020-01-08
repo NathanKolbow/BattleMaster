@@ -1,27 +1,188 @@
 package nkolbow.main;
 
+import java.util.ArrayList;
+
 import nkolbow.board.Board;
+import nkolbow.board.minions.Min;
+import nkolbow.board.minions.deathrattles.Deathrattle;
 
 public class Driver {
 
 	public static void main(String[] args) {
-		Board b = new Board(5, 2);
+		Board b = new Board(4, 4);
 		
 		try {
+			ArrayList<Deathrattle> boom = new ArrayList<Deathrattle>();
+			boom.add(Deathrattle.Gold_Kaboom_Bot);
+			ArrayList<Deathrattle> boom2 = new ArrayList<Deathrattle>();
+			boom2.add(Deathrattle.Kaboom_Bot);
+			ArrayList<Deathrattle> boom3 = new ArrayList<Deathrattle>();
+			boom3.add(Deathrattle.Kaboom_Bot);
+			ArrayList<Deathrattle> boom4 = new ArrayList<Deathrattle>();
+			boom4.add(Deathrattle.Kaboom_Bot);
+			ArrayList<Deathrattle> boom5 = new ArrayList<Deathrattle>();
+			boom5.add(Deathrattle.Kaboom_Bot);
+			ArrayList<Deathrattle> boom6 = new ArrayList<Deathrattle>();
+			boom6.add(Deathrattle.Kaboom_Bot);
+			ArrayList<Deathrattle> boom7 = new ArrayList<Deathrattle>();
+			boom7.add(Deathrattle.Kaboom_Bot);
+			ArrayList<Deathrattle> boom8 = new ArrayList<Deathrattle>();
+			boom8.add(Deathrattle.Kaboom_Bot);
+			
+			b.addMinion(true, Min.Kaboom_Bot, false, 1, 1, false, false, false, boom);
+			b.addMinion(true, Min.Baron_Rivendare, true, 4, 7, false, false, false, null);
+			b.addMinion(true, Min.Alleycat, false, 4, 1, false, false, false, null);
+			b.addMinion(true, Min.Alleycat, false, 4, 1, false, false, false, null);
+			b.addMinion(true, Min.Alleycat, false, 4, 1, false, false, false, null);
+			b.addMinion(true, Min.Alleycat, false, 4, 1, false, false, false, null);
+			b.addMinion(true, Min.Alleycat, false, 4, 1, false, false, false, null);
 
-/*			// Super preliminary deathrattle testing
-			b.addMinion("spawn..2.2.1;t;h;", true, Integer.MAX_VALUE);
-			b.addMinion("spawn..2.2.1;t;h;", true, Integer.MAX_VALUE);
+			b.addMinion(false, Min.Alleycat, false, 1, 4, false, false, true, null);
+			b.addMinion(false, Min.Alleycat, false, 1, 4, false, false, false, null);
+			b.addMinion(false, Min.Alleycat, false, 1, 4, false, false, false, null);
+			b.addMinion(false, Min.Alleycat, false, 1, 4, false, false, false, null);
+			b.addMinion(false, Min.Alleycat, false, 1, 4, false, false, false, null);
+			b.addMinion(false, Min.Alleycat, false, 1, 4, false, false, false, null);
+			
+			// stfu kripp
+//			b.addMinion("goldrinn.b.5.5.5;;o;", true, Integer.MAX_VALUE);
+//			b.addMinion("cobalt.M.10.5.3;d;;d", true, Integer.MAX_VALUE);
+//			b.addMinion("amalgom.a.11.5.2;;k;", true, Integer.MAX_VALUE);
+//			b.addMinion("amalgom.a.7.4.2;p;;", true, Integer.MAX_VALUE);
+//			b.addMinion("sensei.M.4.2.4;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("leaper.M.3.3.2;;;", true, Integer.MAX_VALUE);
+//			
+//			b.addMinion("eye.m.15.9.2;;;c", false, Integer.MAX_VALUE);
+//			b.addMinion("eye.m.14.6.2;;;c", false, Integer.MAX_VALUE);
+//			b.addMinion("amalgom.a.7.8.2;;;", false, Integer.MAX_VALUE);
+//			b.addMinion("coldlight.m.6.5.2;;;", false, Integer.MAX_VALUE);
+//			b.addMinion("coldlight.m.6.3.2;;;", false, Integer.MAX_VALUE);
+//			b.addMinion("war.m.5.5.3;;;b", false, Integer.MAX_VALUE);
+//			b.addMinion("war.m.5.5.3;;;b", false, Integer.MAX_VALUE);
+			
+			
+			
+			// krip n_l
+//			b.addMinion("bag.m.6.15.5;p;w;", true, Integer.MAX_VALUE);
+//			b.addMinion("bag.m.8.21.5;p;w;", true, Integer.MAX_VALUE);
+//			b.addMinion("mur.m.8.23.4;p;;", true, Integer.MAX_VALUE);
+//			b.addMinion("mur.m.11.27.1;p;;", true, Integer.MAX_VALUE);
+//			b.addMinion("mur.m.12.28.1;p;;", true, Integer.MAX_VALUE);
+//			b.addMinion("brann..2.4.5;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("cold_light.m.2.3.2;;;", true, Integer.MAX_VALUE);
+//			
+//			b.addMinion("nzoth..4.4.2;;h;", false, Integer.MAX_VALUE);
+//			b.addMinion("mur.m.4.8.1;p;;", false, Integer.MAX_VALUE);
+//			b.addMinion("brann..2.4.5;;;", false, Integer.MAX_VALUE);
+//			b.addMinion("mech.M.2.5.3;;;", false, Integer.MAX_VALUE);
+//			b.addMinion("b..4.5.3;;;", false, Integer.MAX_VALUE);
+//			b.addMinion("rover.M.11.13.4;;k;l", false, Integer.MAX_VALUE);
+//			b.addMinion("amalgom.a.18.21.2;ptd;;", false, Integer.MAX_VALUE);
+			
+			
+			
+			// The beast
+//			b.addMinion("the_beast.b.1.1.1;;n;", true, Integer.MAX_VALUE);
+//			b.addMinion("khadgar..1.1.1;;;f", true, Integer.MAX_VALUE);
+//			b.addMinion("rivendare..1.1.1;;;n", true, Integer.MAX_VALUE);
+//			
+//			b.addMinion("oofta..1.5.1;;;", false, Integer.MAX_VALUE);
+			
+			
+			
+			// Replicating menace & cobalt
+//			b.addMinion("menace.M.3.1.3;;k;", true, Integer.MAX_VALUE);
+//			b.addMinion("cobalt.M.6.3.3;t;;d", true, Integer.MAX_VALUE);
+//			
+//			b.addMinion("irrel..3.9.1;;;", false, Integer.MAX_VALUE);
+			
+			
+			
+			// KRIPPARIAN'S SECOND "UNLUCKY" SITUATION
+//			b.addMinion("amalgom.a.6.9.2;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("amalgom.a.5.8.2;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("tabby.b.4.4.1;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("coldlight.m.2.5.2;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("coldlight.m.3.4.2;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("leaper.M.3.3.2;;;", true, Integer.MAX_VALUE);
+//			
+//			b.addMinion("tabby.b.4.1.1;;;", false, Integer.MAX_VALUE);
+//			b.addMinion("tabby.b.4.1.1;;;", false, Integer.MAX_VALUE);
+//			b.addMinion("rover.M.4.6.4;;;l", false, Integer.MAX_VALUE);
+//			b.addMinion("leaper.M.3.3.2;;;", false, Integer.MAX_VALUE);
+//			b.addMinion("rat_pack.b.5.2.2;;g;", false, Integer.MAX_VALUE);
+//			b.addMinion("pack_leader..3.3.3;;;g", false, Integer.MAX_VALUE);
+//			b.addMinion("pack_leader..3.3.3;;;g", false, Integer.MAX_VALUE);
+			
+			
+			// Rat pack
+//			b.addMinion("irrel..1.10.1;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("ratpack.b.2.1.1;t;g;", true, Integer.MAX_VALUE);
+//			b.addMinion("pack_leader..3.3.3;;;g", true, Integer.MAX_VALUE);
+//			b.addMinion("pack_leader..3.3.3;;;g", true, Integer.MAX_VALUE);
+//			
+//			b.addMinion("irrel..1.2.1;;;", false, Integer.MAX_VALUE);
+			
+			
+			
+			
+			// Baron riven
+//			b.addMinion("tortollan..1.1.3;t;L;", true, Integer.MAX_VALUE);
+//			b.addMinion("baron..1.1.5;;;N", true, Integer.MAX_VALUE);
+//			
+//			b.addMinion("irrel..2.4.1;;;", false, Integer.MAX_VALUE);
+			
+			
+			
+			
+			// Golden Tortollan
+//			b.addMinion("tortollan..1.1.3;;L;", true, Integer.MAX_VALUE);
+//			b.addMinion("irrel..4.1.1;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("irrel..4.1.1;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("irrel..4.1.1;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("irrel..4.1.1;;;", true, Integer.MAX_VALUE);
+//			
+//			b.addMinion("irrel..10.10.10;;;", false, Integer.MAX_VALUE);
+			
+			
+			// Tortollan
+//			b.addMinion("tortollan..1.1.3;;l;", true, Integer.MAX_VALUE);
+//			b.addMinion("irrel..3.1.1;d;;", true, Integer.MAX_VALUE);
+//			b.addMinion("irrel..1.1.1;;;", true, Integer.MAX_VALUE);
+//			
+//			b.addMinion("irrel..10.10.10;;;", false, Integer.MAX_VALUE);
+			
+			
+			
+			// Goldrinn my dude
+//			b.addMinion("gold.b.4.4.5;t;o;", true, Integer.MAX_VALUE);
+//			b.addMinion("hydra.b.2.4.4;c;;", true, Integer.MAX_VALUE);
+//			b.addMinion("hydra.b.2.4.4;c;;", true, Integer.MAX_VALUE);
+//			b.addMinion("hydra.b.2.4.4;c;;", true, Integer.MAX_VALUE);
+//			
+//			b.addMinion("tabby.b.4.50.1;;;", false, Integer.MAX_VALUE);
+			
+			
+			
+			// Super preliminary deathrattle testing
+//			b.addMinion("spawn..2.2.1;t;h;", true, Integer.MAX_VALUE);
+//			b.addMinion("spawn..2.2.1;t;h;", true, Integer.MAX_VALUE);
+//			b.addMinion("spawn..2.2.1;t;h;", true, Integer.MAX_VALUE);
+//			b.addMinion("spawn..2.2.1;t;h;", true, Integer.MAX_VALUE);
+//
+//			b.addMinion("spawn..2.2.1;t;h;", false, Integer.MAX_VALUE);
+//			b.addMinion("spawn..2.2.1;t;h;", false, Integer.MAX_VALUE);
+//			b.addMinion("spawn..2.2.1;t;h;", false, Integer.MAX_VALUE);
+//			b.addMinion("spawn..2.2.1;t;h;", false, Integer.MAX_VALUE);
 
-			b.addMinion("spawn..2.2.1;t;h;", false, Integer.MAX_VALUE);
-			b.addMinion("spawn..2.2.1;t;h;", false, Integer.MAX_VALUE);
-	*/		
+			
+			
 			
 			// Testerinos
-			b.addMinion("tabby.b.1.5.1;;;", true, Integer.MAX_VALUE);
-
-			b.addMinion("tabby.b.1.4.1;;;", false, Integer.MAX_VALUE);
-			b.addMinion("notTabby.a.1.1.1;p;;", false, Integer.MAX_VALUE);
+//			b.addMinion("tabby.b.1.5.1;;;", true, Integer.MAX_VALUE);
+//
+//			b.addMinion("tabby.b.1.1.1;t;h;", false, Integer.MAX_VALUE);
+//			b.addMinion("notTabby.a.1.1.1;p;;", false, Integer.MAX_VALUE);
 			
 			
 			
@@ -60,19 +221,19 @@ public class Driver {
 			b.getEnemies()._attacking = 1;										*/
 			
 			
-/*			// Kripparian double unlucky first battle
-			b.addMinion("amalgom.a.3.4.2;;;", true, Integer.MAX_VALUE);
-			b.addMinion("amalgom2.a.3.4.2;;;", true, Integer.MAX_VALUE);
-			b.addMinion("tabby.b.3.3.1;;;", true, Integer.MAX_VALUE);
-			b.addMinion("tabby2.b.1.1.1;;;", true, Integer.MAX_VALUE);
-			b.addMinion("tabby_tok.b.1.1.1;;;", true, Integer.MAX_VALUE);
-			
-			b.addMinion("tabby.b.4.1.1;;;", false, Integer.MAX_VALUE);
-			b.addMinion("tabby_tok.b.4.1.1;;;", false, Integer.MAX_VALUE);
-			b.addMinion("rover.M.4.6.4;;;l", false, Integer.MAX_VALUE);
-			b.addMinion("leaper.M.3.3.2;;;", false, Integer.MAX_VALUE);
-			b.addMinion("pack_leader..3.3.3;;;g", false, Integer.MAX_VALUE);
-			b.addMinion("tide.m.2.1.1;;;", false, Integer.MAX_VALUE);			*/
+			// Kripparian double unlucky first battle
+//			b.addMinion("amalgom.a.3.4.2;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("amalgom2.a.3.4.2;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("tabby.b.3.3.1;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("tabby2.b.1.1.1;;;", true, Integer.MAX_VALUE);
+//			b.addMinion("tabby_tok.b.1.1.1;;;", true, Integer.MAX_VALUE);
+//			
+//			b.addMinion("tabby.b.4.1.1;;;", false, Integer.MAX_VALUE);
+//			b.addMinion("tabby_tok.b.4.1.1;;;", false, Integer.MAX_VALUE);
+//			b.addMinion("rover.M.4.6.4;;;l", false, Integer.MAX_VALUE);
+//			b.addMinion("leaper.M.3.3.2;;;", false, Integer.MAX_VALUE);
+//			b.addMinion("pack_leader..3.3.3;;;g", false, Integer.MAX_VALUE);
+//			b.addMinion("tide.m.2.1.1;;;", false, Integer.MAX_VALUE);			
 			
 			// second battle
 //			b.addMinion(minion, isFriend, position);
@@ -87,12 +248,12 @@ public class Driver {
 			
 			
 			
-/*			// Testing security rover
-			b.addMinion("rover.M.1.2.4;;;L", true, Integer.MAX_VALUE);
-			
-			b.addMinion("irrel..1.1.1;;;", false, Integer.MAX_VALUE);
-			b.addMinion("irrel..6.1.1;;;", false, Integer.MAX_VALUE);
-			// <Testing security rover>											*/
+			// Testing security rover
+//			b.addMinion("rover.M.1.2.4;;;L", true, Integer.MAX_VALUE);
+//			
+//			b.addMinion("irrel..1.1.1;;;", false, Integer.MAX_VALUE);
+//			b.addMinion("irrel..6.1.1;;;", false, Integer.MAX_VALUE);
+			// <Testing security rover>											
 			
 			// Kripparian's situation; IRON SENSEI IS NO JOKE <12:00>
 /*			b.addMinion("cobat.M.12.7.3;;;", true, Integer.MAX_VALUE);

@@ -1,8 +1,12 @@
-package nkolbow.board.minions;
+package nkolbow.board.minions.deathrattles;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+
+import nkolbow.board.Board;
+import nkolbow.board.Line;
+import nkolbow.board.minions.Minion;
 
 public class RattleList implements Iterable<RattleEntry> {
 
@@ -25,9 +29,9 @@ public class RattleList implements Iterable<RattleEntry> {
 		depth.add(new LinkedList<RattleEntry>());
 	}
 	
-	public void addAll(int _pos, List<Deathrattle> rattles, boolean isFriend) {
+	public void addAll(int _pos, List<Deathrattle> rattles, Minion source) {
 		for(Deathrattle r : rattles)
-			add(new RattleEntry(_pos, r, isFriend));
+			add(new RattleEntry(_pos, r, source));
 	}
 	
 	public void addAll(List<RattleEntry> rattles) {
@@ -76,16 +80,16 @@ public class RattleList implements Iterable<RattleEntry> {
 	
 	public RattleEntry peak() {
 		if(rattles == null)
-			return new RattleEntry(-1, Deathrattle.None, false);
+			return new RattleEntry(-1, Deathrattle.None, null);
 		if(rattles.size() == 0)
-			return new RattleEntry(-1, Deathrattle.Process, false);
+			return new RattleEntry(-1, Deathrattle.Process, null);
 		
 		return rattles.getFirst();
 	}
 	
 	public RattleEntry pop() {
 		if(rattles == null)
-			return new RattleEntry(-1, Deathrattle.None, false);
+			return new RattleEntry(-1, Deathrattle.None, null);
 		if(rattles.size() == 0) {
 			if(depth.size() <= 1) {
 				rattles = null;
@@ -95,7 +99,7 @@ public class RattleList implements Iterable<RattleEntry> {
 				rattles = depth.get(0);
 			}
 			
-			return new RattleEntry(-1, Deathrattle.Process, false);
+			return new RattleEntry(-1, Deathrattle.Process, null);
 		} else {
 			return rattles.removeFirst();
 		}
@@ -109,14 +113,14 @@ public class RattleList implements Iterable<RattleEntry> {
 		}
 	}
 	
-	public RattleList clone() {
+	public RattleList clone(Board b, Line l) {
 		RattleList toRet = new RattleList();
 		
 		LinkedList<LinkedList<RattleEntry>> newDepth = new LinkedList<LinkedList<RattleEntry>>();
 		for(int i = 0; i < depth.size(); i++) {
 			newDepth.add(new LinkedList<RattleEntry>());
 			for(RattleEntry e : depth.get(i)) {
-				newDepth.get(i).add(e.clone());
+				newDepth.get(i).add(e.clone(b, l));
 			}
 		}
 		toRet.depth = newDepth;
@@ -145,7 +149,7 @@ public class RattleList implements Iterable<RattleEntry> {
 	
 	@Override
 	public Iterator<RattleEntry> iterator() {
-		return rattles.iterator();
+		return (rattles == null) ? null : rattles.iterator();
 	}
 	
 }
