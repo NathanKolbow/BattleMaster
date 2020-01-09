@@ -707,34 +707,27 @@ public class Line {
 			return toRet;
 		}
 		case Demon: {
-Debug.log("DEMON DEATHRATTLE: " + rattle.getSource().toString()
-		+ "\nTotal DEATHRATTLES: " + rattle.getSource().getDeathrattles().size(), 3);
-
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
-			int goldCount = 0;
-			int normCount = 0;
+			int juggleCount = 0;
 			
 			for(Minion m : tempFriends.getAliveMinions()) {
 				if(m.getEffect() == Effect.Soul_Juggler)
-					normCount++;
+					juggleCount++;
 				else if(m.getEffect() == Effect.Gold_Soul_Juggler)
-					goldCount++;
+					juggleCount += 2;
 			}
 			
 			ArrayList<Board> tempBoards = new ArrayList<Board>();
 			ArrayList<Board> currBoards = new ArrayList<Board>();
 			tempBoards.add(board);
 			
-			Debug.log("Norm count: " + normCount, 2);
 			
-			for(int i = 0; i < normCount; i++) {
+			for(int i = 0; i < juggleCount; i++) {
 				currBoards = tempBoards;
 				tempBoards = new ArrayList<Board>();
 				
 				for(Board iBoard : currBoards) {
 					int count = (isFriend) ? iBoard.getEnemies().getAliveMinions().size() : iBoard.getFriends().getAliveMinions().size();
-					
-Debug.log("" + count, 3);
 					
 					for(int j = 0; j < count; j++) {
 						Board tempBoard = iBoard.clone();
@@ -745,29 +738,12 @@ Debug.log("" + count, 3);
 					}
 				}
 			}
-Debug.log("" + tempBoards.size(), 1);
-			for(int i = 0; i < goldCount; i++) {
-				currBoards = tempBoards;
-				tempBoards = new ArrayList<Board>();
-				
-				for(Board iBoard : currBoards) {
-					int count = (isFriend) ? iBoard.getEnemies().getAliveMinions().size() : iBoard.getFriends().getAliveMinions().size();
-					
-					for(int j = 0; j < count; j++) {
-						Board tempBoard = iBoard.clone();
-						Line enemies = (isFriend) ? tempBoard.getEnemies() : tempBoard.getFriends();
-						enemies.getAliveMinions().get(j).takeDamage(6);
-						
-						tempBoards.add(tempBoard);
-					}
-				}
-			}
-Debug.log("" + tempBoards.size(), 1);
+			
 			return tempBoards;
 		}
 		case Selfless_Hero: {
-			int choices = (isFriend) ? board.getFriends().getAliveMinions().size()
-					: board.getEnemies().getAliveMinions().size();
+			int choices = (isFriend) ? board.getFriends().getAliveNonDivineMinions().size()
+					: board.getEnemies().getAliveNonDivineMinions().size();
 			ArrayList<Board> toRet = new ArrayList<Board>();
 			if (choices == 0) {
 				toRet.add(board);
@@ -779,7 +755,7 @@ Debug.log("" + tempBoards.size(), 1);
 					Board newBoard = board.clone();
 					Line tempFriends = (isFriend) ? newBoard.getFriends() : newBoard.getEnemies();
 
-					Minion toBuff = tempFriends.getAliveMinions().get(i);
+					Minion toBuff = tempFriends.getAliveNonDivineMinions().get(i);
 					toBuff.setDivine(true);
 
 					toRet.add(newBoard);
@@ -792,8 +768,8 @@ Debug.log("" + tempBoards.size(), 1);
 						Board newBoard = board.clone();
 						Line tempFriends = (isFriend) ? newBoard.getFriends() : newBoard.getEnemies();
 
-						Minion buffOne = tempFriends.getAliveMinions().get(i);
-						Minion buffTwo = tempFriends.getAliveMinions().get(j);
+						Minion buffOne = tempFriends.getAliveNonDivineMinions().get(i);
+						Minion buffTwo = tempFriends.getAliveNonDivineMinions().get(j);
 
 						buffOne.setDivine(true);
 						buffTwo.setDivine(true);
@@ -808,9 +784,9 @@ Debug.log("" + tempBoards.size(), 1);
 							Board newBoard = board.clone();
 							Line tempFriends = (isFriend) ? newBoard.getFriends() : newBoard.getEnemies();
 
-							Minion buffOne = tempFriends.getAliveMinions().get(i);
-							Minion buffTwo = tempFriends.getAliveMinions().get(j);
-							Minion buffThree = tempFriends.getAliveMinions().get(k);
+							Minion buffOne = tempFriends.getAliveNonDivineMinions().get(i);
+							Minion buffTwo = tempFriends.getAliveNonDivineMinions().get(j);
+							Minion buffThree = tempFriends.getAliveNonDivineMinions().get(k);
 
 							buffOne.setDivine(true);
 							buffTwo.setDivine(true);
@@ -825,8 +801,8 @@ Debug.log("" + tempBoards.size(), 1);
 			return toRet;
 		}
 		case Gold_Selfless_Hero: {
-			int totalChoices = (isFriend) ? board.getFriends().getAliveMinions().size()
-					: board.getEnemies().getAliveMinions().size();
+			int totalChoices = (isFriend) ? board.getFriends().getAliveNonDivineMinions().size()
+					: board.getEnemies().getAliveNonDivineMinions().size();
 			ArrayList<Board> toRet = new ArrayList<Board>();
 
 			if (totalChoices == 0) {
@@ -837,7 +813,7 @@ Debug.log("" + tempBoards.size(), 1);
 					Board newBoard = board.clone();
 					Line tempFriends = (isFriend) ? newBoard.getFriends() : newBoard.getEnemies();
 
-					Minion toBuff = tempFriends.getAliveMinions().get(i);
+					Minion toBuff = tempFriends.getAliveNonDivineMinions().get(i);
 					toBuff.setDivine(true);
 
 					toRet.add(newBoard);
@@ -850,8 +826,8 @@ Debug.log("" + tempBoards.size(), 1);
 						Board newBoard = board.clone();
 
 						Line tempFriends = (isFriend) ? newBoard.getFriends() : newBoard.getEnemies();
-						Minion buffOne = tempFriends.getAliveMinions().get(i);
-						Minion buffTwo = tempFriends.getAliveMinions().get(j);
+						Minion buffOne = tempFriends.getAliveNonDivineMinions().get(i);
+						Minion buffTwo = tempFriends.getAliveNonDivineMinions().get(j);
 
 						buffOne.setDivine(true);
 						buffTwo.setDivine(true);
@@ -863,8 +839,8 @@ Debug.log("" + tempBoards.size(), 1);
 									Board newerBoard = newBoard.clone();
 
 									tempFriends = (isFriend) ? newerBoard.getFriends() : newerBoard.getEnemies();
-									buffOne = tempFriends.getAliveMinions().get(k);
-									buffTwo = tempFriends.getAliveMinions().get(l);
+									buffOne = tempFriends.getAliveNonDivineMinions().get(k);
+									buffTwo = tempFriends.getAliveNonDivineMinions().get(l);
 
 									buffOne.setDivine(true);
 									buffTwo.setDivine(true);
@@ -884,8 +860,8 @@ Debug.log("" + tempBoards.size(), 1);
 										Board newestBoard = b.clone();
 
 										tempFriends = (isFriend) ? newestBoard.getFriends() : newestBoard.getEnemies();
-										buffOne = tempFriends.getAliveMinions().get(m);
-										buffTwo = tempFriends.getAliveMinions().get(n);
+										buffOne = tempFriends.getAliveNonDivineMinions().get(m);
+										buffTwo = tempFriends.getAliveNonDivineMinions().get(n);
 
 										buffOne.setDivine(true);
 										buffTwo.setDivine(true);
@@ -2121,6 +2097,15 @@ Debug.log("" + tempBoards.size(), 1);
 		return toRet;
 	}
 
+	public ArrayList<Minion> getAliveNonDivineMinions() {
+		ArrayList<Minion> toRet = new ArrayList<Minion>();
+		for(Minion m : minions)
+			if(!m.isDead(this) && !m.hasDivine())
+				toRet.add(m);
+		
+		return toRet;
+	}
+	
 	public int summon(Minion toSummon, int _pos, Line from) {
 		ArrayList<Minion> list = new ArrayList<Minion>();
 		list.add(toSummon);

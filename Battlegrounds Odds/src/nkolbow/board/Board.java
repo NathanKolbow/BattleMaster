@@ -174,6 +174,18 @@ System.out.println("\n\n\n");
 	}
 
 	public Minion addMinion(boolean isFriend, Min min, boolean golden, int attack, int health, boolean divine,
+			boolean poison, boolean taunt) throws FullBoardException {
+		return addMinion(isFriend, min, golden, attack, health, divine, poison, taunt, new ArrayList<Deathrattle>());
+	}
+	
+	public Minion addMinion(boolean isFriend, Min min, boolean golden, int attack, int health, boolean divine,
+			boolean poison, boolean taunt, Deathrattle rattle) throws FullBoardException {
+		ArrayList<Deathrattle> rattles = new ArrayList<Deathrattle>();
+		rattles.add(rattle);
+		return addMinion(isFriend, min, golden, attack, health, divine, poison, taunt, rattles);
+	}
+	
+	public Minion addMinion(boolean isFriend, Min min, boolean golden, int attack, int health, boolean divine,
 			boolean poison, boolean taunt, ArrayList<Deathrattle> deathrattles) throws FullBoardException {
 		if ((isFriend) ? friends.size() >= 7 : enemies.size() >= 7) {
 			throw new FullBoardException();

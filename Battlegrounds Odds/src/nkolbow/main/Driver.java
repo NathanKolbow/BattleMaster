@@ -1,11 +1,8 @@
 package nkolbow.main;
 
-import java.util.ArrayList;
-
 import nkolbow.board.Board;
 import nkolbow.board.minions.Min;
 import nkolbow.board.minions.deathrattles.Deathrattle;
-import nkolbow.debug.Debug;
 
 public class Driver {
 
@@ -14,11 +11,15 @@ public class Driver {
 		
 		try {
 			// TODO: FIGURE OUT WHY THE FUCK DEMON DEATHRATTLE IS TRIGGERING TWICE ON THAT SILLY LITTLE IMP
-			 
-			Debug.log("" + b.addMinion(true, Min.Imp, false, 1, 1, false, false, false, null).getDeathrattles().size(), 3);
-			b.addMinion(true, Min.Soul_Juggler, false, 3, 3, false, false, false, null);
 			
-			b.addMinion(false, Min.Alleycat, false, 7, 2, false, false, false, null);
+			b.addMinion(true, Min.Selfless_Hero, false, 1, 1, false, false, false, Deathrattle.Gold_Selfless_Hero);
+			b.addMinion(true, Min.Soul_Juggler, true, 3, 3, true, false, false);
+			b.addMinion(true, Min.Soul_Juggler, true, 3, 3, true, false, false);
+			b.addMinion(true, Min.Soul_Juggler, false, 3, 3, true, false, false);
+			b.addMinion(true, Min.Imp, false, 1, 1, true, false, false);
+			b.addMinion(true, Min.Imp, false, 1, 1, false, false, false);
+
+			b.addMinion(false, Min.Alleycat, false, 7, 1, false, false, false);
 			
 			// stfu kripp
 //			b.addMinion("goldrinn.b.5.5.5;;o;", true, Integer.MAX_VALUE);

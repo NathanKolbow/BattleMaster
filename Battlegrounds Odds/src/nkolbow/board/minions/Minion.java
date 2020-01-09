@@ -70,7 +70,7 @@ public class Minion {
 		this.hasTaunt = hasTaunt;
 
 		this.deathrattles = (deathrattles == null) ? new ArrayList<Deathrattle>() : deathrattles;
-		if(this.tribe == Tribe.Demon)
+		if(this.tribe == Tribe.Demon && !this.deathrattles.contains(Deathrattle.Demon))
 			this.deathrattles.add(Deathrattle.Demon);
 	}
 	
