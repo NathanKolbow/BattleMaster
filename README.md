@@ -5,7 +5,7 @@ Still very much a work in-progress
 ```
 
 ## Version
-Currently matching Hearthstone 16.0.8
+Currently matching Hearthstone patch 16.0.8
 
 ## Caveats
 * Ghastcoiler will never be able to summon itself or Sneed's Old Shredder (this may be changed to only be able to summon either one a limited number of times in a row)
