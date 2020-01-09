@@ -15,4 +15,5 @@ Currently matching Hearthstone patch 16.0.8
 * ~~Get deathrattles working~~
 * ~~Test Khadgar w/ summon buffs (e.g. Mama Bear) to make sure that works as expected~~
 * ~~Implement Kangor's Apprentice's deathrattle~~
+* ~~Implement Soul Juggler~~
 * Implement deathrattles that summon minions of certain costs
