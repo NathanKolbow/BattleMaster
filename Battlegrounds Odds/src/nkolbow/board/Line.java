@@ -108,6 +108,15 @@ public class Line {
 				}
 			}
 
+			for (Minion m : tempFriends.minions) {
+				if (m == attacker)
+					continue;
+				if (m.getEffect() == Effect.Festeroot_Hulk)
+					m.setBaseAttack(m.getBaseAttack() + 1);
+				else if (m.getEffect() == Effect.Gold_Festeroot_Hulk)
+					m.setBaseAttack(m.getBaseAttack() + 2);
+			}
+
 			for (Minion m : damagedMinions) {
 				if (m.isDead(tempEnemies)) {
 					for (Deathrattle rattle : m.getDeathrattles())
@@ -311,21 +320,22 @@ public class Line {
 			// process things like JunkBot
 			for (Minion alive : tempFriends.getAliveMinions()) {
 				if (alive.getEffect() == Effect.Junkbot || alive.getEffect() == Effect.Gold_Junkbot) {
+					int gain = (alive.getEffect() == Effect.Junkbot) ? 2 : 4;
 					for (Minion dead : toRemove) {
 						if (dead.getTribe() == Tribe.Mech) {
-							int gain = (alive.getEffect() == Effect.Junkbot) ? 2 : 4;
 							alive.setBaseAttack(alive.getBaseAttack() + gain);
 							alive.setBaseHealth(alive.getBaseHealth() + gain);
 						}
 					}
-				} /*
-					 * Soul juggler shit PROBABLY goes here, looks like we're gonna be adding
-					 * another deathrattle for juggler hitting shit, b/c it's effectively a
-					 * deathrattle YES YES YES that's so much easier, just give every demon the
-					 * deathrattle: Deathrattle.Demon and process it like a normal deathrattle,
-					 * check for soul jugglers and shoot the juggles as if they were literally just
-					 * deathrattles from the demon that died
-					 */
+				} else if(alive.getEffect() == Effect.Scavenging_Hyena || alive.getEffect() == Effect.Gold_Scavenging_Hyena) {
+					int gain = (alive.getEffect() == Effect.Scavenging_Hyena) ? 1 : 2;
+					for(Minion dead : toRemove) {
+						if(dead.getTribe() == Tribe.Beast) {
+							alive.setBaseAttack(alive.getBaseAttack() + (gain * 2));
+							alive.setBaseHealth(alive.getBaseHealth() + gain);
+						}
+					}
+				}
 			}
 
 			tempFriends._attacking -= toDec;
@@ -695,6 +705,65 @@ public class Line {
 			}
 
 			return toRet;
+		}
+		case Demon: {
+Debug.log("DEMON DEATHRATTLE: " + rattle.getSource().toString()
+		+ "\nTotal DEATHRATTLES: " + rattle.getSource().getDeathrattles().size(), 3);
+
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			int goldCount = 0;
+			int normCount = 0;
+			
+			for(Minion m : tempFriends.getAliveMinions()) {
+				if(m.getEffect() == Effect.Soul_Juggler)
+					normCount++;
+				else if(m.getEffect() == Effect.Gold_Soul_Juggler)
+					goldCount++;
+			}
+			
+			ArrayList<Board> tempBoards = new ArrayList<Board>();
+			ArrayList<Board> currBoards = new ArrayList<Board>();
+			tempBoards.add(board);
+			
+			Debug.log("Norm count: " + normCount, 2);
+			
+			for(int i = 0; i < normCount; i++) {
+				currBoards = tempBoards;
+				tempBoards = new ArrayList<Board>();
+				
+				for(Board iBoard : currBoards) {
+					int count = (isFriend) ? iBoard.getEnemies().getAliveMinions().size() : iBoard.getFriends().getAliveMinions().size();
+					
+Debug.log("" + count, 3);
+					
+					for(int j = 0; j < count; j++) {
+						Board tempBoard = iBoard.clone();
+						Line enemies = (isFriend) ? tempBoard.getEnemies() : tempBoard.getFriends();
+						enemies.getAliveMinions().get(j).takeDamage(3);
+						
+						tempBoards.add(tempBoard);
+					}
+				}
+			}
+Debug.log("" + tempBoards.size(), 1);
+			for(int i = 0; i < goldCount; i++) {
+				currBoards = tempBoards;
+				tempBoards = new ArrayList<Board>();
+				
+				for(Board iBoard : currBoards) {
+					int count = (isFriend) ? iBoard.getEnemies().getAliveMinions().size() : iBoard.getFriends().getAliveMinions().size();
+					
+					for(int j = 0; j < count; j++) {
+						Board tempBoard = iBoard.clone();
+						Line enemies = (isFriend) ? tempBoard.getEnemies() : tempBoard.getFriends();
+						enemies.getAliveMinions().get(j).takeDamage(6);
+						
+						tempBoards.add(tempBoard);
+					}
+				}
+			}
+Debug.log("" + tempBoards.size(), 1);
+			return tempBoards;
 		}
 		case Selfless_Hero: {
 			int choices = (isFriend) ? board.getFriends().getAliveMinions().size()
@@ -1381,7 +1450,7 @@ public class Line {
 			for (int i = 0; i < Math.min(2, tempFriends.mechDeathOrder.size()); i++) {
 				toSummon.add(getBaseMinion(tempFriends.mechDeathOrder.get(i), tempFriends, board));
 			}
-			
+
 			for (int i = 0; i < friendlyRiven; i++) {
 				Debug.log("Summoning " + toSummon.get(0).getMinionEnum() + " in pos " + (rattle.getPos() + i), 2);
 				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
@@ -1419,88 +1488,87 @@ public class Line {
 		}
 
 	}
-	
+
 	public ArrayList<Minion> cloneMinionList(ArrayList<Minion> list, Board b, Line l) {
 		ArrayList<Minion> ret = new ArrayList<Minion>();
-		for(Minion m : list)
+		for (Minion m : list)
 			ret.add(m.clone(b, l));
 		return ret;
 	}
-	
+
 	public Minion getBaseMinion(SimpleEntry<Min, Boolean> info, Line l, Board b) {
 		switch (info.getKey()) {
 
 		// TODO: ADD THSE
 //		Curators_Amalgom,
 
-		
 		case Curators_Amalgom: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Curators_Amalgom, false, Tribe.All, l, 1, 1, 1, 1, b, Effect.None);
 			return new Minion(Min.Curators_Amalgom, false, Tribe.All, l, 2, 2, 2, 1, b, Effect.None);
 		}
 		case Rover_Token: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Rover_Token, false, Tribe.Mech, l, 2, 3, 3, 1, b, Effect.None);
 			return new Minion(Min.Rover_Token, true, Tribe.Mech, l, 4, 6, 6, 1, b, Effect.None);
 		}
 		case Imp: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Imp, false, Tribe.Demon, l, 1, 1, 1, 1, b, Effect.None);
 			return new Minion(Min.Imp, true, Tribe.Demon, l, 2, 2, 2, 1, b, Effect.None);
 		}
 		case Rat: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Rat, false, Tribe.Beast, l, 1, 1, 1, 1, b, Effect.None);
 			return new Minion(Min.Rat, true, Tribe.Beast, l, 2, 2, 2, 1, b, Effect.None);
 		}
 		case Micro_Bot: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Micro_Bot, false, Tribe.Mech, l, 1, 1, 1, 1, b, Effect.None);
 			return new Minion(Min.Micro_Bot, true, Tribe.Mech, l, 2, 2, 2, 1, b, Effect.None);
 		}
 		case Joey_Bot: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Joey_Bot, false, Tribe.Mech, l, 1, 1, 1, 1, b, Effect.None);
 			return new Minion(Min.Joey_Bot, true, Tribe.Mech, l, 2, 2, 2, 1, b, Effect.None);
 		}
 		case Damaged_Golem: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Damaged_Golem, false, Tribe.Mech, l, 2, 1, 1, 1, b, Effect.None);
 			return new Minion(Min.Damaged_Golem, true, Tribe.Mech, l, 4, 2, 2, 1, b, Effect.None);
 		}
 		case Big_Bad_Wolf: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Big_Bad_Wolf, false, Tribe.Beast, l, 3, 2, 2, 1, b, Effect.None);
 			return new Minion(Min.Big_Bad_Wolf, true, Tribe.Beast, l, 6, 4, 4, 1, b, Effect.None);
 		}
 		case Spider: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Spider, false, Tribe.Beast, l, 1, 1, 1, 1, b, Effect.None);
 			return new Minion(Min.Spider, true, Tribe.Beast, l, 2, 2, 2, 1, b, Effect.None);
 		}
 		case Finkle_Einhorn: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Finkle_Einhorn, false, Tribe.None, l, 3, 3, 3, 1, b, Effect.None);
 			return new Minion(Min.Finkle_Einhorn, true, Tribe.None, l, 3, 3, 3, 1, b, Effect.None);
 		}
 		case Dino_Token: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Dino_Token, false, Tribe.Mech, l, 8, 8, 8, 1, b, Effect.None);
 			return new Minion(Min.Dino_Token, true, Tribe.Mech, l, 16, 16, 16, 1, b, Effect.None);
 		}
 		case Thresh_Token: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Thresh_Token, false, Tribe.Murloc, l, 1, 1, 1, 1, b, Effect.None);
 			return new Minion(Min.Thresh_Token, true, Tribe.Murloc, l, 2, 2, 2, 1, b, Effect.None);
 		}
 		case Ironhide_Token: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Ironhide_Direhorn, false, Tribe.Beast, l, 5, 5, 5, 1, b, Effect.None);
 			return new Minion(Min.Ironhide_Direhorn, true, Tribe.Beast, l, 10, 10, 10, 1, b, Effect.None);
 		}
 		case Hyena: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Hyena, false, Tribe.Beast, l, 2, 2, 2, 1, b, Effect.None);
 			return new Minion(Min.Hyena, true, Tribe.Beast, l, 4, 4, 4, 1, b, Effect.None);
 		}
@@ -1564,365 +1632,422 @@ public class Line {
 			return new Minion(Min.Rockpool_Hunter, true, Tribe.Murloc, l, 4, 6, 6, 1, b, Effect.None);
 		}
 		case Dire_Wolf_Alpha: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Dire_Wolf_Alpha, false, Tribe.Beast, l, 2, 2, 2, 2, b, Effect.Dire_Wolf_Alpha);
 			return new Minion(Min.Dire_Wolf_Alpha, true, Tribe.Beast, l, 4, 4, 4, 2, b, Effect.Gold_Dire_Wolf_Alpha);
 		}
 		case Spawn_of_NZoth: {
-			if(!info.getValue())
-				return new Minion(Min.Spawn_of_NZoth, false, Tribe.None, l, 2, 2, 2, 2, b, Effect.None, Deathrattle.Spawn_of_NZoth);
-			return new Minion(Min.Spawn_of_NZoth, false, Tribe.None, l, 4, 4, 4, 2, b, Effect.None, Deathrattle.Gold_Spawn_of_NZoth);
+			if (!info.getValue())
+				return new Minion(Min.Spawn_of_NZoth, false, Tribe.None, l, 2, 2, 2, 2, b, Effect.None,
+						Deathrattle.Spawn_of_NZoth);
+			return new Minion(Min.Spawn_of_NZoth, false, Tribe.None, l, 4, 4, 4, 2, b, Effect.None,
+					Deathrattle.Gold_Spawn_of_NZoth);
 		}
 		case Kindly_Grandmother: {
-			if(!info.getValue())
-				return new Minion(Min.Kindly_Grandmother, false, Tribe.None, l, 1, 1, 1, 2, b, Effect.None, Deathrattle.Kindly_Grandmother);
-			return new Minion(Min.Kindly_Grandmother, true, Tribe.None, l, 2, 2, 2, 2, b, Effect.None, Deathrattle.Gold_Kindly_Grandmother);
+			if (!info.getValue())
+				return new Minion(Min.Kindly_Grandmother, false, Tribe.None, l, 1, 1, 1, 2, b, Effect.None,
+						Deathrattle.Kindly_Grandmother);
+			return new Minion(Min.Kindly_Grandmother, true, Tribe.None, l, 2, 2, 2, 2, b, Effect.None,
+					Deathrattle.Gold_Kindly_Grandmother);
 		}
 		case Mounted_Raptor: {
-			if(!info.getValue())
-				return new Minion(Min.Mounted_Raptor, false, Tribe.Beast, l, 3, 2, 2, 2, b, Effect.None, Deathrattle.Mounted_Raptor);
-			return new Minion(Min.Mounted_Raptor, true, Tribe.Beast, l, 6, 4, 4, 2, b, Effect.None, Deathrattle.Gold_Mounted_Raptor);
+			if (!info.getValue())
+				return new Minion(Min.Mounted_Raptor, false, Tribe.Beast, l, 3, 2, 2, 2, b, Effect.None,
+						Deathrattle.Mounted_Raptor);
+			return new Minion(Min.Mounted_Raptor, true, Tribe.Beast, l, 6, 4, 4, 2, b, Effect.None,
+					Deathrattle.Gold_Mounted_Raptor);
 		}
 		case Rat_Pack: {
-			if(!info.getValue())
-				return new Minion(Min.Rat_Pack, false, Tribe.Beast, l, 2, 2, 2, 2, b, Effect.None, Deathrattle.Rat_Pack);
-			return new Minion(Min.Rat_Pack, true, Tribe.Beast, l, 4, 4, 4, 2, b, Effect.None, Deathrattle.Gold_Rat_Pack);
+			if (!info.getValue())
+				return new Minion(Min.Rat_Pack, false, Tribe.Beast, l, 2, 2, 2, 2, b, Effect.None,
+						Deathrattle.Rat_Pack);
+			return new Minion(Min.Rat_Pack, true, Tribe.Beast, l, 4, 4, 4, 2, b, Effect.None,
+					Deathrattle.Gold_Rat_Pack);
 		}
 		case Scavenging_Hyena: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Scavenging_Hyena, false, Tribe.Beast, l, 2, 2, 2, 2, b, Effect.Scavenging_Hyena);
 			return new Minion(Min.Scavenging_Hyena, true, Tribe.Beast, l, 4, 4, 4, 2, b, Effect.Gold_Scavenging_Hyena);
 		}
 		case Nathrezim_Overseer: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Nathrezim_Overseer, false, Tribe.Demon, l, 2, 4, 4, 2, b, Effect.None);
 			return new Minion(Min.Nathrezim_Overseer, true, Tribe.Demon, l, 4, 8, 8, 2, b, Effect.None);
 		}
 		case Annoy_o_Tron: {
-			if(!info.getValue())
-				return new Minion(Min.Annoy_o_Tron, false, Tribe.Mech, l, 1, 2, 2, 2, b, Effect.None, true, false, false, true);
-			return new Minion(Min.Annoy_o_Tron, true, Tribe.Mech, l, 2, 4, 4, 2, b, Effect.None, true, false, false, true);
+			if (!info.getValue())
+				return new Minion(Min.Annoy_o_Tron, false, Tribe.Mech, l, 1, 2, 2, 2, b, Effect.None, true, false,
+						false, true);
+			return new Minion(Min.Annoy_o_Tron, true, Tribe.Mech, l, 2, 4, 4, 2, b, Effect.None, true, false, false,
+					true);
 		}
 		case Harvest_Golem: {
-			if(!info.getValue())
-				return new Minion(Min.Harvest_Golem, false, Tribe.Mech, l, 2, 1, 1, 2, b, Effect.None, Deathrattle.Harvest_Golem);
-			return new Minion(Min.Harvest_Golem, true, Tribe.Mech, l, 4, 2, 2, 2, b, Effect.None, Deathrattle.Gold_Harvest_Golem);
+			if (!info.getValue())
+				return new Minion(Min.Harvest_Golem, false, Tribe.Mech, l, 2, 1, 1, 2, b, Effect.None,
+						Deathrattle.Harvest_Golem);
+			return new Minion(Min.Harvest_Golem, true, Tribe.Mech, l, 4, 2, 2, 2, b, Effect.None,
+					Deathrattle.Gold_Harvest_Golem);
 		}
 		case Kaboom_Bot: {
-			if(!info.getValue())
-				return new Minion(Min.Kaboom_Bot, false, Tribe.Mech, l, 2, 2, 2, 2, b, Effect.None, Deathrattle.Kaboom_Bot);
-			return new Minion(Min.Kaboom_Bot, true, Tribe.Mech, l, 4, 4, 4, 2, b, Effect.None, Deathrattle.Gold_Kaboom_Bot);
+			if (!info.getValue())
+				return new Minion(Min.Kaboom_Bot, false, Tribe.Mech, l, 2, 2, 2, 2, b, Effect.None,
+						Deathrattle.Kaboom_Bot);
+			return new Minion(Min.Kaboom_Bot, true, Tribe.Mech, l, 4, 4, 4, 2, b, Effect.None,
+					Deathrattle.Gold_Kaboom_Bot);
 		}
 		case Metaltooth_Leaper: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Metaltooth_Leaper, false, Tribe.Mech, l, 3, 3, 3, 2, b, Effect.None);
 			return new Minion(Min.Metaltooth_Leaper, true, Tribe.Mech, l, 6, 6, 6, 2, b, Effect.None);
 		}
 		case Pogo_Hopper: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Pogo_Hopper, false, Tribe.Mech, l, 1, 1, 1, 2, b, Effect.None);
 			return new Minion(Min.Pogo_Hopper, true, Tribe.Mech, l, 2, 2, 2, 2, b, Effect.None);
 		}
 		case Shielded_Minibot: {
-			if(!info.getValue())
-				return new Minion(Min.Shielded_Minibot, false, Tribe.Mech, l, 2, 2, 2, 2, b, Effect.None, true, false, false, false);
-			return new Minion(Min.Shielded_Minibot, true, Tribe.Mech, l, 4, 4, 4, 2, b, Effect.None, true, false, false, false);
+			if (!info.getValue())
+				return new Minion(Min.Shielded_Minibot, false, Tribe.Mech, l, 2, 2, 2, 2, b, Effect.None, true, false,
+						false, false);
+			return new Minion(Min.Shielded_Minibot, true, Tribe.Mech, l, 4, 4, 4, 2, b, Effect.None, true, false, false,
+					false);
 		}
 		case Zoobot: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Zoobot, false, Tribe.Mech, l, 3, 3, 3, 2, b, Effect.None);
 			return new Minion(Min.Zoobot, true, Tribe.Mech, l, 6, 6, 6, 2, b, Effect.None);
 		}
 		case Coldlight_Seer: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Coldlight_Seer, false, Tribe.Murloc, l, 2, 3, 3, 2, b, Effect.None);
 			return new Minion(Min.Coldlight_Seer, true, Tribe.Murloc, l, 4, 6, 6, 2, b, Effect.None);
 		}
 		case Old_Murk_Eye: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Old_Murk_Eye, false, Tribe.Murloc, l, 2, 4, 4, 2, b, Effect.Old_Murk_Eye);
 			return new Minion(Min.Old_Murk_Eye, true, Tribe.Murloc, l, 4, 8, 8, 2, b, Effect.Gold_Old_Murk_Eye);
 		}
 		case Murloc_Warleader: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Murloc_Warleader, false, Tribe.Murloc, l, 3, 3, 3, 2, b, Effect.Murloc_Warleader);
 			return new Minion(Min.Murloc_Warleader, true, Tribe.Murloc, l, 6, 6, 6, 2, b, Effect.Gold_Murloc_Warleader);
 		}
 		case Nightmare_Amalgam: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Nightmare_Amalgam, false, Tribe.All, l, 3, 4, 4, 3, b, Effect.None);
 			return new Minion(Min.Nightmare_Amalgam, true, Tribe.All, l, 6, 8, 8, 3, b, Effect.None);
 		}
 		case Crowd_Favorite: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Crowd_Favorite, false, Tribe.None, l, 4, 4, 4, 3, b, Effect.None);
 			return new Minion(Min.Crowd_Favorite, true, Tribe.None, l, 8, 8, 8, 3, b, Effect.None);
 		}
 		case Crystalweaver: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Crystalweaver, false, Tribe.None, l, 5, 4, 4, 3, b, Effect.None);
 			return new Minion(Min.Crystalweaver, true, Tribe.None, l, 10, 8, 8, 3, b, Effect.None);
 		}
 		case Houndmaster: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Houndmaster, false, Tribe.None, l, 4, 3, 3, 3, b, Effect.None);
 			return new Minion(Min.Houndmaster, true, Tribe.None, l, 8, 6, 6, 3, b, Effect.None);
 		}
 		case Shifter_Zerus: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Shifter_Zerus, false, Tribe.None, l, 1, 1, 1, 3, b, Effect.None);
 			return new Minion(Min.Shifter_Zerus, true, Tribe.None, l, 2, 2, 2, 3, b, Effect.None);
 		}
 		case Tortollan_Shellraiser: {
-			if(!info.getValue())
-				return new Minion(Min.Tortollan_Shellraiser, false, Tribe.None, l, 2, 6, 6, 3, b, Effect.None, Deathrattle.Tortollan_Shellraiser);
-			return new Minion(Min.Tortollan_Shellraiser, true, Tribe.None, l, 4, 12, 12, 3, b, Effect.None, Deathrattle.Gold_Tortollan_Shellraiser);
+			if (!info.getValue())
+				return new Minion(Min.Tortollan_Shellraiser, false, Tribe.None, l, 2, 6, 6, 3, b, Effect.None,
+						Deathrattle.Tortollan_Shellraiser);
+			return new Minion(Min.Tortollan_Shellraiser, true, Tribe.None, l, 4, 12, 12, 3, b, Effect.None,
+					Deathrattle.Gold_Tortollan_Shellraiser);
 		}
 		case Infested_Wolf: {
-			if(!info.getValue())
-				return new Minion(Min.Infested_Wolf, false, Tribe.Beast, l, 3, 3, 3, 3, b, Effect.None, Deathrattle.Infested_Wolf);
-			return new Minion(Min.Infested_Wolf, true, Tribe.Beast, l, 6, 6, 6, 3, b, Effect.None, Deathrattle.Gold_Infested_Wolf);
+			if (!info.getValue())
+				return new Minion(Min.Infested_Wolf, false, Tribe.Beast, l, 3, 3, 3, 3, b, Effect.None,
+						Deathrattle.Infested_Wolf);
+			return new Minion(Min.Infested_Wolf, true, Tribe.Beast, l, 6, 6, 6, 3, b, Effect.None,
+					Deathrattle.Gold_Infested_Wolf);
 		}
 		case Imp_Gang_Boss: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Imp_Gang_Boss, false, Tribe.Demon, l, 2, 4, 4, 3, b, Effect.Imp_Gang_Boss);
 			return new Minion(Min.Imp_Gang_Boss, true, Tribe.Demon, l, 4, 8, 8, 3, b, Effect.Gold_Imp_Gang_Boss);
 		}
 		case Floating_Watcher: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Floating_Watcher, false, Tribe.Demon, l, 4, 4, 4, 3, b, Effect.None);
 			return new Minion(Min.Floating_Watcher, true, Tribe.Demon, l, 8, 8, 8, 3, b, Effect.None);
 		}
 		case Cobalt_Guardian: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Cobalt_Guardian, false, Tribe.Mech, l, 6, 3, 3, 3, b, Effect.Cobalt_Guardian);
 			return new Minion(Min.Cobalt_Guardian, true, Tribe.Mech, l, 12, 6, 6, 3, b, Effect.Gold_Cobalt_Guardian);
 		}
 		case Piloted_Shredder: {
-			if(!info.getValue())
-				return new Minion(Min.Piloted_Shredder, false, Tribe.Mech, l, 4, 3, 3, 3, b, Effect.None, Deathrattle.Piloted_Shredder);
-			return new Minion(Min.Piloted_Shredder, true, Tribe.Mech, l, 8, 6, 6, 3, b, Effect.None, Deathrattle.Gold_Piloted_Shredder);
+			if (!info.getValue())
+				return new Minion(Min.Piloted_Shredder, false, Tribe.Mech, l, 4, 3, 3, 3, b, Effect.None,
+						Deathrattle.Piloted_Shredder);
+			return new Minion(Min.Piloted_Shredder, true, Tribe.Mech, l, 8, 6, 6, 3, b, Effect.None,
+					Deathrattle.Gold_Piloted_Shredder);
 		}
 		case Psych_o_Tron: {
-			if(!info.getValue())
-				return new Minion(Min.Psych_o_Tron, false, Tribe.Mech, l, 3, 4, 4, 3, b, Effect.None, true, false, false, true);
-			return new Minion(Min.Psych_o_Tron, true, Tribe.Mech, l, 6, 8, 8, 3, b, Effect.None, true, false, false, true);
+			if (!info.getValue())
+				return new Minion(Min.Psych_o_Tron, false, Tribe.Mech, l, 3, 4, 4, 3, b, Effect.None, true, false,
+						false, true);
+			return new Minion(Min.Psych_o_Tron, true, Tribe.Mech, l, 6, 8, 8, 3, b, Effect.None, true, false, false,
+					true);
 		}
 		case Replicating_Menace: {
-			if(!info.getValue())
-				return new Minion(Min.Replicating_Menace, false, Tribe.Mech, l, 3, 1, 1, 3, b, Effect.None, Deathrattle.Replicating_Menace);
-			return new Minion(Min.Replicating_Menace, true, Tribe.Mech, l, 6, 2, 2, 3, b, Effect.None, Deathrattle.Gold_Replicating_Menace);
+			if (!info.getValue())
+				return new Minion(Min.Replicating_Menace, false, Tribe.Mech, l, 3, 1, 1, 3, b, Effect.None,
+						Deathrattle.Replicating_Menace);
+			return new Minion(Min.Replicating_Menace, true, Tribe.Mech, l, 6, 2, 2, 3, b, Effect.None,
+					Deathrattle.Gold_Replicating_Menace);
 		}
 		case Screwjank_Clunker: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Screwjank_Clunker, false, Tribe.Mech, l, 2, 5, 5, 3, b, Effect.None);
 			return new Minion(Min.Screwjank_Clunker, true, Tribe.Mech, l, 4, 10, 10, 3, b, Effect.None);
 		}
 		case Khadgar: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Khadgar, false, Tribe.None, l, 2, 2, 2, 3, b, Effect.Khadgar);
 			return new Minion(Min.Khadgar, true, Tribe.None, l, 4, 4, 4, 3, b, Effect.Gold_Khadgar);
 		}
 		case Pack_Leader: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Pack_Leader, false, Tribe.None, l, 3, 3, 3, 3, b, Effect.Pack_Leader);
 			return new Minion(Min.Pack_Leader, true, Tribe.None, l, 6, 6, 6, 3, b, Effect.Gold_Pack_Leader);
 		}
 		case Phalanx_Commander: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Phalanx_Commander, false, Tribe.None, l, 4, 5, 5, 3, b, Effect.Phalanx_Commander);
-			return new Minion(Min.Phalanx_Commander, true, Tribe.None, l, 8, 10, 10, 3, b, Effect.Gold_Phalanx_Commander);
+			return new Minion(Min.Phalanx_Commander, true, Tribe.None, l, 8, 10, 10, 3, b,
+					Effect.Gold_Phalanx_Commander);
 		}
 		case Soul_Juggler: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Soul_Juggler, false, Tribe.None, l, 3, 3, 3, 3, b, Effect.Soul_Juggler);
 			return new Minion(Min.Soul_Juggler, true, Tribe.None, l, 6, 6, 6, 3, b, Effect.Gold_Soul_Juggler);
 		}
 		case Defender_of_Argus: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Defender_of_Argus, false, Tribe.None, l, 2, 3, 3, 4, b, Effect.None);
 			return new Minion(Min.Defender_of_Argus, true, Tribe.None, l, 4, 6, 6, 4, b, Effect.None);
 		}
 		case Menagerie_Magician: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Menagerie_Magician, false, Tribe.None, l, 4, 4, 4, 4, b, Effect.None);
 			return new Minion(Min.Menagerie_Magician, true, Tribe.None, l, 8, 8, 8, 4, b, Effect.None);
 		}
 		case Virmen_Sensei: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Virmen_Sensei, false, Tribe.None, l, 4, 5, 5, 4, b, Effect.None);
 			return new Minion(Min.Virmen_Sensei, true, Tribe.None, l, 8, 10, 10, 4, b, Effect.None);
 		}
 		case Bolvar_Fireblood: {
-			if(!info.getValue())
-				return new Minion(Min.Bolvar_Fireblood, false, Tribe.None, l, 1, 7, 7, 4, b, Effect.Bolvar_Fireblood, true, false, false, false);
-			return new Minion(Min.Bolvar_Fireblood, true, Tribe.None, l, 2, 14, 14, 4, b, Effect.Gold_Bolvar_Fireblood, true, false, false, false);
+			if (!info.getValue())
+				return new Minion(Min.Bolvar_Fireblood, false, Tribe.None, l, 1, 7, 7, 4, b, Effect.Bolvar_Fireblood,
+						true, false, false, false);
+			return new Minion(Min.Bolvar_Fireblood, true, Tribe.None, l, 2, 14, 14, 4, b, Effect.Gold_Bolvar_Fireblood,
+					true, false, false, false);
 		}
 		case Festeroot_Hulk: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Festeroot_Hulk, false, Tribe.None, l, 2, 7, 7, 4, b, Effect.Festeroot_Hulk);
 			return new Minion(Min.Festeroot_Hulk, true, Tribe.None, l, 4, 14, 14, 4, b, Effect.Festeroot_Hulk);
 		}
 		case Cave_Hydra: {
-			if(!info.getValue())
-				return new Minion(Min.Cave_Hydra, false, Tribe.Beast, l, 2, 4, 4, 4, b, Effect.None, false, false, true, false);
-			return new Minion(Min.Cave_Hydra, true, Tribe.Beast, l, 4, 8, 8, 4, b, Effect.None, false, false, true, false);
+			if (!info.getValue())
+				return new Minion(Min.Cave_Hydra, false, Tribe.Beast, l, 2, 4, 4, 4, b, Effect.None, false, false, true,
+						false);
+			return new Minion(Min.Cave_Hydra, true, Tribe.Beast, l, 4, 8, 8, 4, b, Effect.None, false, false, true,
+					false);
 		}
 		case The_Beast: {
-			if(!info.getValue())
-				return new Minion(Min.The_Beast, false, Tribe.Beast, l, 9, 7, 7, 4, b, Effect.None, Deathrattle.The_Beast);
-			return new Minion(Min.The_Beast, true, Tribe.Beast, l, 18, 14, 14, 4, b, Effect.None, Deathrattle.Gold_The_Beast);
+			if (!info.getValue())
+				return new Minion(Min.The_Beast, false, Tribe.Beast, l, 9, 7, 7, 4, b, Effect.None,
+						Deathrattle.The_Beast);
+			return new Minion(Min.The_Beast, true, Tribe.Beast, l, 18, 14, 14, 4, b, Effect.None,
+					Deathrattle.Gold_The_Beast);
 		}
 		case Siegebreaker: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Siegebreaker, false, Tribe.Demon, l, 5, 8, 8, 4, b, Effect.Siegebreaker);
 			return new Minion(Min.Siegebreaker, true, Tribe.Demon, l, 10, 16, 16, 4, b, Effect.Gold_Siegebreaker);
 		}
 		case Annoy_o_Module: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Annoy_o_Module, false, Tribe.Mech, l, 2, 4, 4, 4, b, Effect.None);
 			return new Minion(Min.Annoy_o_Module, true, Tribe.Mech, l, 4, 8, 8, 4, b, Effect.None);
 		}
 		case Iron_Sensei: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Iron_Sensei, false, Tribe.Mech, l, 2, 2, 2, 4, b, Effect.None);
 			return new Minion(Min.Iron_Sensei, true, Tribe.Mech, l, 4, 4, 4, 4, b, Effect.None);
 		}
 		case Piloted_Sky_Golem: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Piloted_Sky_Golem, false, Tribe.Mech, l, 6, 4, 4, 4, b, Effect.None);
 			return new Minion(Min.Piloted_Sky_Golem, true, Tribe.Mech, l, 12, 8, 8, 4, b, Effect.None);
 		}
 		case Security_Rover: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Security_Rover, false, Tribe.Mech, l, 2, 6, 6, 4, b, Effect.Security_Rover);
 			return new Minion(Min.Security_Rover, true, Tribe.Mech, l, 4, 12, 12, 4, b, Effect.Gold_Security_Rover);
 		}
 		case Toxfin: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Toxfin, false, Tribe.Murloc, l, 1, 2, 2, 4, b, Effect.None);
 			return new Minion(Min.Toxfin, true, Tribe.Murloc, l, 2, 4, 4, 4, b, Effect.None);
 		}
 		case Brann_Bronzebeard: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Brann_Bronzebeard, false, Tribe.None, l, 2, 4, 4, 4, b, Effect.None);
 			return new Minion(Min.Brann_Bronzebeard, true, Tribe.None, l, 4, 8, 8, 4, b, Effect.None);
 		}
 		case Lightfang_Enforcer: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Lightfang_Enforcer, false, Tribe.None, l, 2, 2, 2, 5, b, Effect.None);
 			return new Minion(Min.Lightfang_Enforcer, true, Tribe.None, l, 4, 4, 4, 5, b, Effect.None);
 		}
 		case Strongshell_Scavenger: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Strongshell_Scavenger, false, Tribe.None, l, 2, 3, 3, 5, b, Effect.None);
 			return new Minion(Min.Strongshell_Scavenger, true, Tribe.None, l, 4, 6, 6, 5, b, Effect.None);
 		}
 		case Baron_Rivendare: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Baron_Rivendare, false, Tribe.None, l, 1, 7, 7, 5, b, Effect.Baron_Rivendare);
 			return new Minion(Min.Baron_Rivendare, true, Tribe.None, l, 2, 14, 14, 5, b, Effect.Gold_Baron_Rivendare);
 		}
 		case Goldrinn_the_Great_Wolf: {
-			if(!info.getValue())
-				return new Minion(Min.Goldrinn_the_Great_Wolf, false, Tribe.Beast, l, 4, 4, 4, 5, b, Effect.None, Deathrattle.Goldrinn_the_Great_Wolf);
-			return new Minion(Min.Goldrinn_the_Great_Wolf, true, Tribe.Beast, l, 8, 8, 8, 5, b, Effect.None, Deathrattle.Gold_Goldrinn_the_Great_Wolf);
+			if (!info.getValue())
+				return new Minion(Min.Goldrinn_the_Great_Wolf, false, Tribe.Beast, l, 4, 4, 4, 5, b, Effect.None,
+						Deathrattle.Goldrinn_the_Great_Wolf);
+			return new Minion(Min.Goldrinn_the_Great_Wolf, true, Tribe.Beast, l, 8, 8, 8, 5, b, Effect.None,
+					Deathrattle.Gold_Goldrinn_the_Great_Wolf);
 		}
 		case Ironhide_Direhorn: {
-			if(!info.getValue())
-				return new Minion(Min.Ironhide_Direhorn, false, Tribe.Beast, l, 7, 7, 7, 5, b, Effect.Ironhide_Direhorn);
-			return new Minion(Min.Ironhide_Direhorn, true, Tribe.Beast, l, 14, 14, 14, 5, b, Effect.Gold_Ironhide_Direhorn);
+			if (!info.getValue())
+				return new Minion(Min.Ironhide_Direhorn, false, Tribe.Beast, l, 7, 7, 7, 5, b,
+						Effect.Ironhide_Direhorn);
+			return new Minion(Min.Ironhide_Direhorn, true, Tribe.Beast, l, 14, 14, 14, 5, b,
+					Effect.Gold_Ironhide_Direhorn);
 		}
 		case Sated_Threshadon: {
-			if(!info.getValue())
-				return new Minion(Min.Sated_Threshadon, false, Tribe.Beast, l, 5, 7, 7, 5, b, Effect.None, Deathrattle.Sated_Threshadon);
-			return new Minion(Min.Sated_Threshadon, true, Tribe.Beast, l, 10, 14, 14, 5, b, Effect.None, Deathrattle.Gold_Sated_Threshadon);
+			if (!info.getValue())
+				return new Minion(Min.Sated_Threshadon, false, Tribe.Beast, l, 5, 7, 7, 5, b, Effect.None,
+						Deathrattle.Sated_Threshadon);
+			return new Minion(Min.Sated_Threshadon, true, Tribe.Beast, l, 10, 14, 14, 5, b, Effect.None,
+					Deathrattle.Gold_Sated_Threshadon);
 		}
 		case Savannah_Highmane: {
-			if(!info.getValue())
-				return new Minion(Min.Savannah_Highmane, false, Tribe.Beast, l, 6, 5, 5, 5, b, Effect.None, Deathrattle.Savannah_Highmane);
-			return new Minion(Min.Savannah_Highmane, true, Tribe.Beast, l, 12, 10, 10, 5, b, Effect.None, Deathrattle.Gold_Savannah_Highmane);
+			if (!info.getValue())
+				return new Minion(Min.Savannah_Highmane, false, Tribe.Beast, l, 6, 5, 5, 5, b, Effect.None,
+						Deathrattle.Savannah_Highmane);
+			return new Minion(Min.Savannah_Highmane, true, Tribe.Beast, l, 12, 10, 10, 5, b, Effect.None,
+					Deathrattle.Gold_Savannah_Highmane);
 		}
 		case Annihilan_Battlemaster: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Annihilan_Battlemaster, false, Tribe.Demon, l, 3, 1, 1, 5, b, Effect.None);
 			return new Minion(Min.Annihilan_Battlemaster, true, Tribe.Demon, l, 6, 2, 2, 5, b, Effect.None);
 		}
 		case MalGanis: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.MalGanis, false, Tribe.Demon, l, 9, 7, 7, 5, b, Effect.MalGanis);
 			return new Minion(Min.MalGanis, true, Tribe.Demon, l, 18, 14, 14, 5, b, Effect.Gold_MalGanis);
 		}
 		case Voidlord: {
-			if(!info.getValue())
-				return new Minion(Min.Voidlord, false, Tribe.Demon, l, 3, 9, 9, 5, b, Effect.None, Deathrattle.Voidlord);
-			return new Minion(Min.Voidlord, true, Tribe.Demon, l, 6, 18, 18, 5, b, Effect.None, Deathrattle.Gold_Voidlord);
+			if (!info.getValue())
+				return new Minion(Min.Voidlord, false, Tribe.Demon, l, 3, 9, 9, 5, b, Effect.None,
+						Deathrattle.Voidlord);
+			return new Minion(Min.Voidlord, true, Tribe.Demon, l, 6, 18, 18, 5, b, Effect.None,
+					Deathrattle.Gold_Voidlord);
 		}
 		case Junkbot: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Junkbot, false, Tribe.Mech, l, 1, 5, 5, 5, b, Effect.Junkbot);
 			return new Minion(Min.Junkbot, true, Tribe.Mech, l, 2, 10, 10, 5, b, Effect.Gold_Junkbot);
 		}
 		case Mechano_Egg: {
-			if(!info.getValue())
-				return new Minion(Min.Mechano_Egg, false, Tribe.Mech, l, 0, 5, 5, 5, b, Effect.None, Deathrattle.Mechano_egg);
-			return new Minion(Min.Mechano_Egg, true, Tribe.Mech, l, 0, 10, 10, 5, b, Effect.None, Deathrattle.Gold_Mechano_egg);
+			if (!info.getValue())
+				return new Minion(Min.Mechano_Egg, false, Tribe.Mech, l, 0, 5, 5, 5, b, Effect.None,
+						Deathrattle.Mechano_egg);
+			return new Minion(Min.Mechano_Egg, true, Tribe.Mech, l, 0, 10, 10, 5, b, Effect.None,
+					Deathrattle.Gold_Mechano_egg);
 		}
 		case King_Bagurgle: {
-			if(!info.getValue())
-				return new Minion(Min.King_Bagurgle, false, Tribe.Murloc, l, 6, 3, 3, 5, b, Effect.None, Deathrattle.King_Bagurgle);
-			return new Minion(Min.King_Bagurgle, true, Tribe.Murloc, l, 12, 6, 6, 5, b, Effect.None, Deathrattle.Gold_King_Bagurgle);
+			if (!info.getValue())
+				return new Minion(Min.King_Bagurgle, false, Tribe.Murloc, l, 6, 3, 3, 5, b, Effect.None,
+						Deathrattle.King_Bagurgle);
+			return new Minion(Min.King_Bagurgle, true, Tribe.Murloc, l, 12, 6, 6, 5, b, Effect.None,
+					Deathrattle.Gold_King_Bagurgle);
 		}
 		case Primalfin_Lookout: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Primalfin_Lookout, false, Tribe.Murloc, l, 3, 2, 2, 5, b, Effect.None);
 			return new Minion(Min.Primalfin_Lookout, true, Tribe.Murloc, l, 6, 4, 4, 5, b, Effect.None);
 		}
 		case Kangors_Apprentice: {
-			if(!info.getValue())
-				return new Minion(Min.Kangors_Apprentice, false, Tribe.None, l, 3, 6, 6, 6, b, Effect.None, Deathrattle.Kangors_Apprentice);
-			return new Minion(Min.Kangors_Apprentice, true, Tribe.None, l, 6, 12, 12, 6, b, Effect.None, Deathrattle.Gold_Kangors_Apprentice);
+			if (!info.getValue())
+				return new Minion(Min.Kangors_Apprentice, false, Tribe.None, l, 3, 6, 6, 6, b, Effect.None,
+						Deathrattle.Kangors_Apprentice);
+			return new Minion(Min.Kangors_Apprentice, true, Tribe.None, l, 6, 12, 12, 6, b, Effect.None,
+					Deathrattle.Gold_Kangors_Apprentice);
 		}
 		case Zapp_Slywick: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Zapp_Slywick, false, Tribe.None, l, 7, 10, 10, 6, b, Effect.Zapp_Slywick);
 			return new Minion(Min.Zapp_Slywick, true, Tribe.None, l, 14, 20, 20, 6, b, Effect.Gold_Zapp_Slywick);
 		}
 		case Gentle_Megasaur: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Gentle_Megasaur, false, Tribe.Beast, l, 5, 4, 4, 6, b, Effect.None);
 			return new Minion(Min.Gentle_Megasaur, true, Tribe.Beast, l, 10, 8, 8, 6, b, Effect.None);
 		}
 		case Ghastcoiler: {
-			if(!info.getValue())
-				return new Minion(Min.Ghastcoiler, false, Tribe.Beast, l, 7, 7, 7, 6, b, Effect.None, Deathrattle.Ghastcoiler);
-			return new Minion(Min.Ghastcoiler, true, Tribe.Beast, l, 14, 14, 14, 6, b, Effect.None, Deathrattle.Gold_Ghastcoiler);
+			if (!info.getValue())
+				return new Minion(Min.Ghastcoiler, false, Tribe.Beast, l, 7, 7, 7, 6, b, Effect.None,
+						Deathrattle.Ghastcoiler);
+			return new Minion(Min.Ghastcoiler, true, Tribe.Beast, l, 14, 14, 14, 6, b, Effect.None,
+					Deathrattle.Gold_Ghastcoiler);
 		}
 		case Maexxna: {
-			if(!info.getValue())
-				return new Minion(Min.Maexxna, false, Tribe.Beast, l, 2, 8, 8, 6, b, Effect.None, false, true, false, false);
-			return new Minion(Min.Maexxna, true, Tribe.Beast, l, 4, 16, 16, 6, b, Effect.None, false, true, false, false);
+			if (!info.getValue())
+				return new Minion(Min.Maexxna, false, Tribe.Beast, l, 2, 8, 8, 6, b, Effect.None, false, true, false,
+						false);
+			return new Minion(Min.Maexxna, true, Tribe.Beast, l, 4, 16, 16, 6, b, Effect.None, false, true, false,
+					false);
 		}
 		case Mama_Bear: {
-			if(!info.getValue())
+			if (!info.getValue())
 				return new Minion(Min.Mama_Bear, false, Tribe.Beast, l, 4, 4, 4, 6, b, Effect.Mama_Bear);
 			return new Minion(Min.Mama_Bear, true, Tribe.Beast, l, 8, 8, 8, 6, b, Effect.Gold_Mama_Bear);
 		}
 		case Foe_Reaper_4000: {
-			if(!info.getValue())
-				return new Minion(Min.Foe_Reaper_4000, false, Tribe.Mech, l, 6, 9, 9, 6, b, Effect.None, false, false, true, false);
-			return new Minion(Min.Foe_Reaper_4000, true, Tribe.Mech, l, 12, 18, 18, 6, b, Effect.None, false, false, true, false);
+			if (!info.getValue())
+				return new Minion(Min.Foe_Reaper_4000, false, Tribe.Mech, l, 6, 9, 9, 6, b, Effect.None, false, false,
+						true, false);
+			return new Minion(Min.Foe_Reaper_4000, true, Tribe.Mech, l, 12, 18, 18, 6, b, Effect.None, false, false,
+					true, false);
 		}
 		case Sneeds_Old_Shredder: {
-			if(!info.getValue())
-				return new Minion(Min.Sneeds_Old_Shredder, false, Tribe.Mech, l, 5, 7, 7, 6, b, Effect.None, Deathrattle.Sneeds_Old_Shredder);
-			return new Minion(Min.Sneeds_Old_Shredder, true, Tribe.Mech, l, 10, 14, 14, 6, b, Effect.None, Deathrattle.Gold_Sneeds_Old_Shredder);
+			if (!info.getValue())
+				return new Minion(Min.Sneeds_Old_Shredder, false, Tribe.Mech, l, 5, 7, 7, 6, b, Effect.None,
+						Deathrattle.Sneeds_Old_Shredder);
+			return new Minion(Min.Sneeds_Old_Shredder, true, Tribe.Mech, l, 10, 14, 14, 6, b, Effect.None,
+					Deathrattle.Gold_Sneeds_Old_Shredder);
 		}
 		default:
 			Debug.log("This shouldn't be possible, must've missed a minion.", 3);
 			break;
 		}
-		
+
 		return null;
 	}
 
@@ -2050,7 +2175,7 @@ public class Line {
 		}
 
 		int toRet = 0;
-		
+
 		for (Minion m : summonList) {
 			if (minions.size() < 7) {
 				minions.add(Math.min(minions.size(), _pos + toRet), m);
@@ -2224,7 +2349,7 @@ public class Line {
 		for (Minion m : minions) {
 			toRet += m.getStars();
 		}
-		
+
 		return toRet;
 	}
 

@@ -173,7 +173,7 @@ System.out.println("\n\n\n");
 		}
 	}
 
-	public void addMinion(boolean isFriend, Min min, boolean golden, int attack, int health, boolean divine,
+	public Minion addMinion(boolean isFriend, Min min, boolean golden, int attack, int health, boolean divine,
 			boolean poison, boolean taunt, ArrayList<Deathrattle> deathrattles) throws FullBoardException {
 		if ((isFriend) ? friends.size() >= 7 : enemies.size() >= 7) {
 			throw new FullBoardException();
@@ -186,6 +186,11 @@ System.out.println("\n\n\n");
 			int stars = 0;
 
 			switch (min) {
+			case Imp: {
+				stars = 1;
+				tribe = Tribe.Demon;
+				break;
+			}
 			case Righteous_Protector: {
 				stars = 1;
 				break;
@@ -610,6 +615,8 @@ System.out.println("\n\n\n");
 				friends.addLast(toAdd);
 			else
 				enemies.addLast(toAdd);
+			
+			return toAdd;
 		}
 	}
 

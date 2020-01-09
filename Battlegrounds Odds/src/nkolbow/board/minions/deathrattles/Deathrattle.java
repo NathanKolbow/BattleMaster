@@ -13,6 +13,8 @@ public enum Deathrattle {
 	Gold_Mechano_egg, Gold_Sated_Threshadon, Gold_Savannah_Highmane, Gold_Voidlord, Gold_Ghastcoiler, Gold_Kangors_Apprentice, 
 	Gold_Sneeds_Old_Shredder, Gold_King_Bagurgle,
 	
+	Demon, // This deathrattle is used for Soul Jugglers
+	
 	None,   // special deathrattle code used by RattleList to signal the end of all deathrattles
 	Process // special deathrattle code used by RattleList & deathrattle processing
 }

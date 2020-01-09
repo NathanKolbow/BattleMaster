@@ -70,6 +70,8 @@ public class Minion {
 		this.hasTaunt = hasTaunt;
 
 		this.deathrattles = (deathrattles == null) ? new ArrayList<Deathrattle>() : deathrattles;
+		if(this.tribe == Tribe.Demon)
+			this.deathrattles.add(Deathrattle.Demon);
 	}
 	
 	public Minion(Min minionEnum, boolean isGolden, Tribe tribe, Line line, int attack, int health, int maxHealth,

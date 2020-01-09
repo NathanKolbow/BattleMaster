@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import nkolbow.board.Board;
 import nkolbow.board.minions.Min;
 import nkolbow.board.minions.deathrattles.Deathrattle;
+import nkolbow.debug.Debug;
 
 public class Driver {
 
@@ -12,28 +13,12 @@ public class Driver {
 		Board b = new Board(4, 4);
 		
 		try {
-			ArrayList<Deathrattle> boom = new ArrayList<Deathrattle>();
-			boom.add(Deathrattle.Gold_Kangors_Apprentice);
-			ArrayList<Deathrattle> boom2 = new ArrayList<Deathrattle>();
-			boom2.add(Deathrattle.Kangors_Apprentice);
-			ArrayList<Deathrattle> boom3 = new ArrayList<Deathrattle>();
-			boom3.add(Deathrattle.Kangors_Apprentice);
-			ArrayList<Deathrattle> boom4 = new ArrayList<Deathrattle>();
-			boom4.add(Deathrattle.Kangors_Apprentice);
-			ArrayList<Deathrattle> boom5 = new ArrayList<Deathrattle>();
-			boom5.add(Deathrattle.Kangors_Apprentice);
-			ArrayList<Deathrattle> boom6 = new ArrayList<Deathrattle>();
-			boom6.add(Deathrattle.Kangors_Apprentice);
-			ArrayList<Deathrattle> boom7 = new ArrayList<Deathrattle>();
-			boom7.add(Deathrattle.Kangors_Apprentice);
-			ArrayList<Deathrattle> boom8 = new ArrayList<Deathrattle>();
-			boom8.add(Deathrattle.Kangors_Apprentice);
+			// TODO: FIGURE OUT WHY THE FUCK DEMON DEATHRATTLE IS TRIGGERING TWICE ON THAT SILLY LITTLE IMP
 			
-			b.addMinion(true, Min.Cobalt_Guardian, false, 1, 1, false, false, false, null);
-			b.addMinion(true, Min.Kangors_Apprentice, false, 4, 7, false, false, true, boom);
-			b.addMinion(true, Min.Baron_Rivendare, false, 1, 7, false, false, false, null);
-
-			b.addMinion(false, Min.Alleycat, false, 10, 5, false, false, false, null);
+			Debug.log("" + b.addMinion(true, Min.Imp, false, 1, 1, false, false, false, null).getDeathrattles().size(), 3);
+			b.addMinion(true, Min.Soul_Juggler, false, 3, 3, false, false, false, null);
+			
+			b.addMinion(false, Min.Alleycat, false, 7, 2, false, false, false, null);
 			
 			// stfu kripp
 //			b.addMinion("goldrinn.b.5.5.5;;o;", true, Integer.MAX_VALUE);
