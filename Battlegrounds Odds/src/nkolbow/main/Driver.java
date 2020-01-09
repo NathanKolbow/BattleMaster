@@ -14,7 +14,7 @@ public class Driver {
 		
 		try {
 			// TODO: FIGURE OUT WHY THE FUCK DEMON DEATHRATTLE IS TRIGGERING TWICE ON THAT SILLY LITTLE IMP
-			
+			 
 			Debug.log("" + b.addMinion(true, Min.Imp, false, 1, 1, false, false, false, null).getDeathrattles().size(), 3);
 			b.addMinion(true, Min.Soul_Juggler, false, 3, 3, false, false, false, null);
 			
