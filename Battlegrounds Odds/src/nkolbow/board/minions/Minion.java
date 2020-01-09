@@ -34,7 +34,23 @@ public class Minion {
 	private boolean hasTaunt;
 
 	private ArrayList<Deathrattle> deathrattles;
-
+	
+	public Minion(Min minionEnum, boolean isGolden, Tribe tribe, Line line, int attack, int health, int maxHealth,
+			int stars, Board board, Effect effect, Deathrattle rattle) {
+		this(minionEnum, isGolden, tribe, line, attack, health, maxHealth, stars, board, effect, false, false, false, false, new ArrayList<Deathrattle>());
+		this.deathrattles.add(rattle);
+	}
+	public Minion(Min minionEnum, boolean isGolden, Tribe tribe, Line line, int attack, int health, int maxHealth,
+			int stars, Board board, Effect effect, boolean hasDivine, boolean hasPoison, boolean hasCleave,
+			boolean hasTaunt) {
+		this(minionEnum, isGolden, tribe, line, attack, health, maxHealth, stars, board, effect, hasDivine, hasPoison, hasCleave, hasTaunt, new ArrayList<Deathrattle>());
+	}
+	
+	public Minion(Min minionEnum, boolean isGolden, Tribe tribe, Line line, int attack, int health, int maxHealth,
+			int stars, Board board, Effect effect) {
+		this(minionEnum, isGolden, tribe, line, attack, health, maxHealth, stars, board, effect, false, false, false, false, new ArrayList<Deathrattle>());
+	}
+	
 	public Minion(Min minionEnum, boolean isGolden, Tribe tribe, Line line, int attack, int health, int maxHealth,
 			int stars, Board board, Effect effect, boolean hasDivine, boolean hasPoison, boolean hasCleave,
 			boolean hasTaunt, ArrayList<Deathrattle> deathrattles) {
@@ -54,6 +70,13 @@ public class Minion {
 		this.hasTaunt = hasTaunt;
 
 		this.deathrattles = (deathrattles == null) ? new ArrayList<Deathrattle>() : deathrattles;
+	}
+	
+	public Minion(Min minionEnum, boolean isGolden, Tribe tribe, Line line, int attack, int health, int maxHealth,
+			int stars, Board board, Effect effect, boolean hasDivine, boolean hasPoison, boolean hasCleave,
+			boolean hasTaunt, Deathrattle rattle) {
+		this(minionEnum, isGolden, tribe, line, attack, health, maxHealth, stars, board, effect, hasDivine, hasPoison, hasCleave, hasTaunt, new ArrayList<Deathrattle>());
+		this.deathrattles.add(rattle);
 	}
 
 	public void setDeathrattles(ArrayList<Deathrattle> deaths) {
@@ -285,25 +308,25 @@ public class Minion {
 				int _ind = this.line.getMinions().indexOf(this) + 1;
 
 				Minion rover = new Minion(Min.Rover_Token, false, Tribe.Mech, this.line, 2, 3, 3, 1, this.board,
-						Effect.None, false, false, false, true, null);
+						Effect.None, false, false, false, true);
 				this.line.summon(rover, _ind, this.line);
 			} else if (this.effect == Effect.Gold_Security_Rover) {
 				int _ind = this.line.getMinions().indexOf(this) + 1;
 
 				Minion rover = new Minion(Min.Rover_Token, true, Tribe.Mech, this.line, 4, 6, 6, 1, this.board,
-						Effect.None, false, false, false, true, null);
+						Effect.None, false, false, false, true);
 				this.line.summon(rover, _ind, this.line);
 			} else if (this.effect == Effect.Imp_Gang_Boss) {
 				int _ind = this.line.getMinions().indexOf(this) + 1;
 
 				Minion rover = new Minion(Min.Imp, false, Tribe.Demon, this.line, 1, 1, 1, 1, this.board, Effect.None,
-						false, false, false, true, null);
+						false, false, false, true);
 				this.line.summon(rover, _ind, this.line);
 			} else if (this.effect == Effect.Gold_Imp_Gang_Boss) {
 				int _ind = this.line.getMinions().indexOf(this) + 1;
 
 				Minion rover = new Minion(Min.Imp, true, Tribe.Demon, this.line, 2, 2, 2, 1, this.board, Effect.None,
-						false, false, false, true, null);
+						false, false, false, true);
 				this.line.summon(rover, _ind, this.line);
 			}
 		}

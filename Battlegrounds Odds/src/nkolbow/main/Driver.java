@@ -13,36 +13,27 @@ public class Driver {
 		
 		try {
 			ArrayList<Deathrattle> boom = new ArrayList<Deathrattle>();
-			boom.add(Deathrattle.Gold_Kaboom_Bot);
+			boom.add(Deathrattle.Gold_Kangors_Apprentice);
 			ArrayList<Deathrattle> boom2 = new ArrayList<Deathrattle>();
-			boom2.add(Deathrattle.Kaboom_Bot);
+			boom2.add(Deathrattle.Kangors_Apprentice);
 			ArrayList<Deathrattle> boom3 = new ArrayList<Deathrattle>();
-			boom3.add(Deathrattle.Kaboom_Bot);
+			boom3.add(Deathrattle.Kangors_Apprentice);
 			ArrayList<Deathrattle> boom4 = new ArrayList<Deathrattle>();
-			boom4.add(Deathrattle.Kaboom_Bot);
+			boom4.add(Deathrattle.Kangors_Apprentice);
 			ArrayList<Deathrattle> boom5 = new ArrayList<Deathrattle>();
-			boom5.add(Deathrattle.Kaboom_Bot);
+			boom5.add(Deathrattle.Kangors_Apprentice);
 			ArrayList<Deathrattle> boom6 = new ArrayList<Deathrattle>();
-			boom6.add(Deathrattle.Kaboom_Bot);
+			boom6.add(Deathrattle.Kangors_Apprentice);
 			ArrayList<Deathrattle> boom7 = new ArrayList<Deathrattle>();
-			boom7.add(Deathrattle.Kaboom_Bot);
+			boom7.add(Deathrattle.Kangors_Apprentice);
 			ArrayList<Deathrattle> boom8 = new ArrayList<Deathrattle>();
-			boom8.add(Deathrattle.Kaboom_Bot);
+			boom8.add(Deathrattle.Kangors_Apprentice);
 			
-			b.addMinion(true, Min.Kaboom_Bot, false, 1, 1, false, false, false, boom);
-			b.addMinion(true, Min.Baron_Rivendare, true, 4, 7, false, false, false, null);
-			b.addMinion(true, Min.Alleycat, false, 4, 1, false, false, false, null);
-			b.addMinion(true, Min.Alleycat, false, 4, 1, false, false, false, null);
-			b.addMinion(true, Min.Alleycat, false, 4, 1, false, false, false, null);
-			b.addMinion(true, Min.Alleycat, false, 4, 1, false, false, false, null);
-			b.addMinion(true, Min.Alleycat, false, 4, 1, false, false, false, null);
+			b.addMinion(true, Min.Cobalt_Guardian, false, 1, 1, false, false, false, null);
+			b.addMinion(true, Min.Kangors_Apprentice, false, 4, 7, false, false, true, boom);
+			b.addMinion(true, Min.Baron_Rivendare, false, 1, 7, false, false, false, null);
 
-			b.addMinion(false, Min.Alleycat, false, 1, 4, false, false, true, null);
-			b.addMinion(false, Min.Alleycat, false, 1, 4, false, false, false, null);
-			b.addMinion(false, Min.Alleycat, false, 1, 4, false, false, false, null);
-			b.addMinion(false, Min.Alleycat, false, 1, 4, false, false, false, null);
-			b.addMinion(false, Min.Alleycat, false, 1, 4, false, false, false, null);
-			b.addMinion(false, Min.Alleycat, false, 1, 4, false, false, false, null);
+			b.addMinion(false, Min.Alleycat, false, 10, 5, false, false, false, null);
 			
 			// stfu kripp
 //			b.addMinion("goldrinn.b.5.5.5;;o;", true, Integer.MAX_VALUE);

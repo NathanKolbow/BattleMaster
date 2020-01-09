@@ -1,5 +1,6 @@
 package nkolbow.board;
 
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
@@ -16,7 +17,7 @@ import nkolbow.debug.Debug;
 public class Line {
 
 	private LinkedList<Minion> minions;
-	private LinkedList<Minion> mechDeathOrder;
+	private LinkedList<SimpleEntry<Min, Boolean>> mechDeathOrder;
 	private RattleList rattles; // used when deathrattles are being triggered sequentially
 								// probably end up creating a special data structure for this
 								// that properly orders deathrattles when they're added
@@ -26,7 +27,7 @@ public class Line {
 
 	public Line() {
 		minions = new LinkedList<Minion>();
-		mechDeathOrder = new LinkedList<Minion>();
+		mechDeathOrder = new LinkedList<SimpleEntry<Min, Boolean>>();
 		rattles = new RattleList();
 	}
 
@@ -87,8 +88,9 @@ public class Line {
 				for (Minion m : damagedMinions) {
 					if (m.isDead(tempEnemies)) {
 						int stat = (attacker.getEffect() == Effect.Ironhide_Direhorn) ? 5 : 10;
-						Minion token = new Minion(Min.Ironhide_Token, attacker.getIsGolden(), Tribe.Beast, tempFriends, stat, stat, stat, 1,
-								newBoard, Effect.None, false, false, false, false, new ArrayList<Deathrattle>());
+						Minion token = new Minion(Min.Ironhide_Token, attacker.getIsGolden(), Tribe.Beast, tempFriends,
+								stat, stat, stat, 1, newBoard, Effect.None, false, false, false, false,
+								new ArrayList<Deathrattle>());
 
 						tempFriends.summon(token, tempFriends.minions.indexOf(attacker), tempFriends);
 					}
@@ -128,10 +130,6 @@ public class Line {
 			 * tempFriends.incAttacking(); }
 			 */
 
-			// TODO: Implement deathrattles
-			// Dead minions can't be hit by deathrattles, so removing minions from their
-			// linked lists then triggering deathrattles
-			// Does that for us implicitly
 			if (attacker.isDead(tempFriends)) {
 				for (Deathrattle rattle : attacker.getDeathrattles())
 					tempFriends.rattles.add(new RattleEntry(tempFriends.minions.indexOf(attacker), rattle, attacker));
@@ -304,25 +302,32 @@ public class Line {
 					incAttacking = true;
 				}
 			}
+
+			for (Minion m : toRemove)
+				if (m.getTribe() == Tribe.Mech || m.getTribe() == Tribe.All)
+					tempFriends.mechDeathOrder.add(new SimpleEntry<Min, Boolean>(m.getMinionEnum(), m.getIsGolden()));
 			tempFriends.minions.removeAll(toRemove);
-			
+
 			// process things like JunkBot
-			for(Minion alive : tempFriends.getAliveMinions()) {
-				if(alive.getEffect() == Effect.Junkbot || alive.getEffect() == Effect.Gold_Junkbot) {
-					for(Minion dead : toRemove) {
-						if(dead.getTribe() == Tribe.Mech) {
+			for (Minion alive : tempFriends.getAliveMinions()) {
+				if (alive.getEffect() == Effect.Junkbot || alive.getEffect() == Effect.Gold_Junkbot) {
+					for (Minion dead : toRemove) {
+						if (dead.getTribe() == Tribe.Mech) {
 							int gain = (alive.getEffect() == Effect.Junkbot) ? 2 : 4;
 							alive.setBaseAttack(alive.getBaseAttack() + gain);
 							alive.setBaseHealth(alive.getBaseHealth() + gain);
 						}
 					}
-				}  /*
-					* Soul juggler shit PROBABLY goes here, looks like we're gonna be adding another deathrattle for juggler hitting shit, b/c it's effectively a deathrattle
-					* YES YES YES that's so much easier, just give every demon the deathrattle: Deathrattle.Demon and process it like a normal deathrattle,
-					* check for soul jugglers and shoot the juggles as if they were literally just deathrattles from the demon that died
-					*/
+				} /*
+					 * Soul juggler shit PROBABLY goes here, looks like we're gonna be adding
+					 * another deathrattle for juggler hitting shit, b/c it's effectively a
+					 * deathrattle YES YES YES that's so much easier, just give every demon the
+					 * deathrattle: Deathrattle.Demon and process it like a normal deathrattle,
+					 * check for soul jugglers and shoot the juggles as if they were literally just
+					 * deathrattles from the demon that died
+					 */
 			}
-			
+
 			tempFriends._attacking -= toDec;
 			if (incAttacking)
 				tempFriends.incAttacking();
@@ -349,6 +354,10 @@ public class Line {
 				}
 			}
 			tempEnemies._attacking -= toDec;
+
+			for (Minion m : toRemove)
+				if (m.getTribe() == Tribe.Mech || m.getTribe() == Tribe.All)
+					tempEnemies.mechDeathOrder.add(new SimpleEntry<Min, Boolean>(m.getMinionEnum(), m.getIsGolden()));
 			tempEnemies.minions.removeAll(toRemove);
 			if (tempEnemies._attacking == tempEnemies.minions.size())
 				tempEnemies._attacking = 0;
@@ -451,7 +460,7 @@ public class Line {
 			if (friendlyRiven == 1) {
 				for (int i = 0; i < choices; i++) {
 					Debug.log((rattle.getSource().getLine() == board.getEnemies()) ? "ENEMY" : "FRIEND", 3);
-					
+
 					Board newBoard = board.clone();
 					Line tempEnemies = (isFriend) ? newBoard.getEnemies() : newBoard.getFriends();
 
@@ -466,23 +475,23 @@ public class Line {
 				for (int i = 0; i < choices; i++) {
 					Board newBoard1 = board.clone();
 					Line tempEnemies1 = (isFriend) ? newBoard1.getEnemies() : newBoard1.getFriends();
-					
+
 					Minion hitOne = tempEnemies1.getAliveMinions().get(i);
 					hitOne.takeDamage(4);
-					
+
 					int secondChoices = tempEnemies1.getAliveMinions().size();
-					if(secondChoices == 0) {
+					if (secondChoices == 0) {
 						toRet.add(newBoard1);
 						return toRet;
 					}
-					
+
 					for (int j = 0; j < secondChoices; j++) {
 						Board newBoard2 = newBoard1.clone();
 						Line tempEnemies2 = (isFriend) ? newBoard2.getEnemies() : newBoard2.getFriends();
-						
+
 						Minion hitTwo = tempEnemies2.getAliveMinions().get(j);
 						hitTwo.takeDamage(4);
-						
+
 						toRet.add(newBoard2);
 					}
 				}
@@ -490,34 +499,34 @@ public class Line {
 				for (int i = 0; i < choices; i++) {
 					Board newBoard1 = board.clone();
 					Line tempEnemies1 = (isFriend) ? newBoard1.getEnemies() : newBoard1.getFriends();
-					
+
 					Minion hitOne = tempEnemies1.getAliveMinions().get(i);
 					hitOne.takeDamage(4);
-					
+
 					int secondChoices = tempEnemies1.getAliveMinions().size();
-					if(secondChoices == 0) {
+					if (secondChoices == 0) {
 						toRet.add(newBoard1);
 					}
-					
-					for(int j = 0; j < secondChoices; j++) {
+
+					for (int j = 0; j < secondChoices; j++) {
 						Board newBoard2 = newBoard1.clone();
 						Line tempEnemies2 = (isFriend) ? newBoard2.getEnemies() : newBoard2.getFriends();
-						
+
 						Minion hitTwo = tempEnemies2.getAliveMinions().get(j);
 						hitTwo.takeDamage(4);
-						
+
 						int threeChoices = tempEnemies2.getAliveMinions().size();
-						if(threeChoices == 0) {
+						if (threeChoices == 0) {
 							toRet.add(newBoard2);
 						}
-						
-						for(int k = 0; k < threeChoices; k++) {
+
+						for (int k = 0; k < threeChoices; k++) {
 							Board newBoard3 = newBoard2.clone();
 							Line tempEnemies3 = (isFriend) ? newBoard3.getEnemies() : newBoard3.getFriends();
-							
+
 							Minion hitThree = tempEnemies3.getAliveMinions().get(k);
 							hitThree.takeDamage(4);
-							
+
 							toRet.add(newBoard3);
 						}
 					}
@@ -536,25 +545,25 @@ public class Line {
 			}
 
 			if (friendlyRiven == 1) {
-				for(int i = 0; i < choices; i++) {
+				for (int i = 0; i < choices; i++) {
 					Board newBoard = board.clone();
 					Line tempEnemies = (isFriend) ? newBoard.getEnemies() : newBoard.getFriends();
-					
+
 					Minion hitOne = tempEnemies.getAliveMinions().get(i);
 					hitOne.takeDamage(4);
-					
+
 					int secondChoices = tempEnemies.getAliveMinions().size();
-					if(secondChoices == 0) {
+					if (secondChoices == 0) {
 						toRet.add(newBoard);
 					}
-					
-					for(int j = 0; j < secondChoices; j++) {
+
+					for (int j = 0; j < secondChoices; j++) {
 						Board newBoard2 = newBoard.clone();
 						Line tempEnemies2 = (isFriend) ? newBoard2.getEnemies() : newBoard2.getFriends();
-						
+
 						Minion hitTwo = tempEnemies2.getAliveMinions().get(j);
 						hitTwo.takeDamage(4);
-						
+
 						toRet.add(newBoard2);
 					}
 				}
@@ -562,46 +571,46 @@ public class Line {
 				for (int i1 = 0; i1 < choices; i1++) {
 					Board newBoard1 = board.clone();
 					Line tempEnemies1 = (isFriend) ? newBoard1.getEnemies() : newBoard1.getFriends();
-					
+
 					Minion hitOne = tempEnemies1.getAliveMinions().get(i1);
 					hitOne.takeDamage(4);
-					
+
 					int oneSecondChoices = tempEnemies1.getAliveMinions().size();
-					if(oneSecondChoices == 0) {
+					if (oneSecondChoices == 0) {
 						toRet.add(newBoard1);
 					}
-					
+
 					for (int i2 = 0; i2 < oneSecondChoices; i2++) {
 						Board newBoard2 = newBoard1.clone();
 						Line tempEnemies2 = (isFriend) ? newBoard2.getEnemies() : newBoard2.getFriends();
-						
+
 						Minion hitTwo = tempEnemies2.getAliveMinions().get(i2);
 						hitTwo.takeDamage(4);
-						
+
 						int twoFirstChoices = tempEnemies2.getAliveMinions().size();
-						if(twoFirstChoices == 0) {
+						if (twoFirstChoices == 0) {
 							toRet.add(newBoard2);
 						}
-						
-						for(int j1 = 0; j1 < twoFirstChoices; j1++) {
+
+						for (int j1 = 0; j1 < twoFirstChoices; j1++) {
 							Board newBoard3 = newBoard2.clone();
 							Line tempEnemies3 = (isFriend) ? newBoard3.getEnemies() : newBoard3.getFriends();
-							
+
 							Minion hitThree = tempEnemies3.getAliveMinions().get(j1);
 							hitThree.takeDamage(4);
-							
+
 							int twoSecondChoices = tempEnemies3.getAliveMinions().size();
-							if(twoSecondChoices == 0) {
+							if (twoSecondChoices == 0) {
 								toRet.add(newBoard3);
 							}
-							
-							for(int j2 = 0; j2 < twoSecondChoices; j2++) {
+
+							for (int j2 = 0; j2 < twoSecondChoices; j2++) {
 								Board newBoard4 = newBoard3.clone();
 								Line tempEnemies4 = (isFriend) ? newBoard4.getEnemies() : newBoard4.getFriends();
-								
+
 								Minion hitFour = tempEnemies4.getAliveMinions().get(j2);
 								hitFour.takeDamage(4);
-								
+
 								toRet.add(newBoard4);
 							}
 						}
@@ -611,70 +620,71 @@ public class Line {
 				for (int i1 = 0; i1 < choices; i1++) {
 					Board newBoard1 = board.clone();
 					Line tempEnemies1 = (isFriend) ? newBoard1.getEnemies() : newBoard1.getFriends();
-					
+
 					Minion hitOne = tempEnemies1.getAliveMinions().get(i1);
 					hitOne.takeDamage(4);
-					
+
 					int oneSecondChoices = tempEnemies1.getAliveMinions().size();
-					if(oneSecondChoices == 0) {
+					if (oneSecondChoices == 0) {
 						toRet.add(newBoard1);
 					}
-					
+
 					for (int i2 = 0; i2 < oneSecondChoices; i2++) {
 						Board newBoard2 = newBoard1.clone();
 						Line tempEnemies2 = (isFriend) ? newBoard2.getEnemies() : newBoard2.getFriends();
-						
+
 						Minion hitTwo = tempEnemies2.getAliveMinions().get(i2);
 						hitTwo.takeDamage(4);
-						
+
 						int twoFirstChoices = tempEnemies2.getAliveMinions().size();
-						if(twoFirstChoices == 0) {
+						if (twoFirstChoices == 0) {
 							toRet.add(newBoard2);
 						}
-						
-						for(int j1 = 0; j1 < twoFirstChoices; j1++) {
+
+						for (int j1 = 0; j1 < twoFirstChoices; j1++) {
 							Board newBoard3 = newBoard2.clone();
 							Line tempEnemies3 = (isFriend) ? newBoard3.getEnemies() : newBoard3.getFriends();
-							
+
 							Minion hitThree = tempEnemies3.getAliveMinions().get(j1);
 							hitThree.takeDamage(4);
-							
+
 							int twoSecondChoices = tempEnemies3.getAliveMinions().size();
-							if(twoSecondChoices == 0) {
+							if (twoSecondChoices == 0) {
 								toRet.add(newBoard3);
 							}
-							
-							for(int j2 = 0; j2 < twoSecondChoices; j2++) {
+
+							for (int j2 = 0; j2 < twoSecondChoices; j2++) {
 								Board newBoard4 = newBoard3.clone();
 								Line tempEnemies4 = (isFriend) ? newBoard4.getEnemies() : newBoard4.getFriends();
-								
+
 								Minion hitFour = tempEnemies4.getAliveMinions().get(j2);
 								hitFour.takeDamage(4);
-								
+
 								int threeFirstChoices = tempEnemies4.getAliveMinions().size();
-								if(threeFirstChoices == 0) {
+								if (threeFirstChoices == 0) {
 									toRet.add(newBoard4);
 								}
-								
-								for(int k1 = 0; k1 < threeFirstChoices; k1++) {
+
+								for (int k1 = 0; k1 < threeFirstChoices; k1++) {
 									Board newBoard5 = newBoard4.clone();
 									Line tempEnemies5 = (isFriend) ? newBoard5.getEnemies() : newBoard5.getFriends();
-									
+
 									Minion hitFive = tempEnemies5.getAliveMinions().get(k1);
 									hitFive.takeDamage(4);
-									
+
 									int threeSecondChoices = tempEnemies5.getAliveMinions().size();
-									if(threeSecondChoices == 0) {
+									if (threeSecondChoices == 0) {
 										toRet.add(newBoard5);
 									}
-									
-									for(int k2 = 0; k2 < threeSecondChoices; k2++) {
+
+									for (int k2 = 0; k2 < threeSecondChoices; k2++) {
 										Board newBoard6 = newBoard5.clone();
-										Line tempEnemies6 = (isFriend) ? newBoard6.getEnemies() : newBoard6.getFriends();
-										
+										Line tempEnemies6 = (isFriend) ? newBoard6.getEnemies()
+												: newBoard6.getFriends();
+
 										Minion hitSix = tempEnemies6.getAliveMinions().get(k2);
 										hitSix.takeDamage(4);
-										
+
 										toRet.add(newBoard6);
 									}
 								}
@@ -757,10 +767,10 @@ public class Line {
 				for (int i = 0; i < totalChoices; i++) {
 					Board newBoard = board.clone();
 					Line tempFriends = (isFriend) ? newBoard.getFriends() : newBoard.getEnemies();
-					
+
 					Minion toBuff = tempFriends.getAliveMinions().get(i);
 					toBuff.setDivine(true);
-					
+
 					toRet.add(newBoard);
 				}
 
@@ -810,7 +820,7 @@ public class Line {
 
 										buffOne.setDivine(true);
 										buffTwo.setDivine(true);
-										
+
 										baronTwoBoards.add(newestBoard);
 									}
 								}
@@ -905,7 +915,7 @@ public class Line {
 				for (int i = 0; i < totalChoices; i++) {
 					Board newBoard = board.clone();
 					Line tempFriends = (isFriend) ? newBoard.getFriends() : newBoard.getEnemies();
-					
+
 					Minion toBuff = tempFriends.getAliveMinions().get(i);
 					toBuff.setBaseAttack(toBuff.getBaseAttack() + friendlyRiven); // 1 * friendlyRiven
 					toBuff.setBaseHealth(toBuff.getBaseHealth() + friendlyRiven);
@@ -989,12 +999,12 @@ public class Line {
 
 			ArrayList<Minion> toSummon = new ArrayList<Minion>();
 			for (int i = 0; i < rattle.getSource().getAttack(tempFriends); i++) {
-				toSummon.add(new Minion(Min.Rat, false, Tribe.Beast, tempFriends, 1, 1, 1, 1, board, Effect.None,
-						false, false, false, false, new ArrayList<Deathrattle>()));
+				toSummon.add(new Minion(Min.Rat, false, Tribe.Beast, tempFriends, 1, 1, 1, 1, board, Effect.None, false,
+						false, false, false, new ArrayList<Deathrattle>()));
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1006,12 +1016,12 @@ public class Line {
 
 			ArrayList<Minion> toSummon = new ArrayList<Minion>();
 			for (int i = 0; i < rattle.getSource().getAttack(tempFriends); i++) {
-				toSummon.add(new Minion(Min.Rat, true, Tribe.Beast, tempFriends, 2, 2, 2, 1, board, Effect.None,
-						false, false, false, false, new ArrayList<Deathrattle>()));
+				toSummon.add(new Minion(Min.Rat, true, Tribe.Beast, tempFriends, 2, 2, 2, 1, board, Effect.None, false,
+						false, false, false, new ArrayList<Deathrattle>()));
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1024,12 +1034,12 @@ public class Line {
 
 			ArrayList<Minion> toSummon = new ArrayList<Minion>();
 			for (int i = 0; i < 3; i++) {
-				toSummon.add(new Minion(Min.Micro_Bot, false, Tribe.Mech, tempFriends, 1, 1, 1, 1, board, Effect.None, false,
-						false, false, false, new ArrayList<Deathrattle>()));
+				toSummon.add(new Minion(Min.Micro_Bot, false, Tribe.Mech, tempFriends, 1, 1, 1, 1, board, Effect.None,
+						false, false, false, false, new ArrayList<Deathrattle>()));
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1042,12 +1052,12 @@ public class Line {
 
 			ArrayList<Minion> toSummon = new ArrayList<Minion>();
 			for (int i = 0; i < 3; i++) {
-				toSummon.add(new Minion(Min.Micro_Bot, true, Tribe.Mech, tempFriends, 2, 2, 2, 1, board, Effect.None, false,
-						false, false, false, new ArrayList<Deathrattle>()));
+				toSummon.add(new Minion(Min.Micro_Bot, true, Tribe.Mech, tempFriends, 2, 2, 2, 1, board, Effect.None,
+						false, false, false, false, new ArrayList<Deathrattle>()));
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1057,11 +1067,11 @@ public class Line {
 		case Mecharoo: {
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 
-			Minion toSummon = new Minion(Min.Joey_Bot, false, Tribe.Mech, tempFriends, 1, 1, 1, 1, board, Effect.None, false,
-					false, false, false, new ArrayList<Deathrattle>());
+			Minion toSummon = new Minion(Min.Joey_Bot, false, Tribe.Mech, tempFriends, 1, 1, 1, 1, board, Effect.None,
+					false, false, false, false, new ArrayList<Deathrattle>());
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(toSummon.clone(board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1071,11 +1081,11 @@ public class Line {
 		case Gold_Mecharoo: {
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 
-			Minion toSummon = new Minion(Min.Joey_Bot, true, Tribe.Mech, tempFriends, 2, 2, 2, 1, board, Effect.None, false,
-					false, false, false, new ArrayList<Deathrattle>());
+			Minion toSummon = new Minion(Min.Joey_Bot, true, Tribe.Mech, tempFriends, 2, 2, 2, 1, board, Effect.None,
+					false, false, false, false, new ArrayList<Deathrattle>());
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(toSummon.clone(board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1085,11 +1095,11 @@ public class Line {
 		case Harvest_Golem: {
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 
-			Minion toSummon = new Minion(Min.Damaged_Golem, false, Tribe.Mech, tempFriends, 2, 1, 1, 1, board, Effect.None,
-					false, false, false, false, new ArrayList<Deathrattle>());
+			Minion toSummon = new Minion(Min.Damaged_Golem, false, Tribe.Mech, tempFriends, 2, 1, 1, 1, board,
+					Effect.None, false, false, false, false, new ArrayList<Deathrattle>());
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(toSummon.clone(board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1099,11 +1109,11 @@ public class Line {
 		case Gold_Harvest_Golem: {
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 
-			Minion toSummon = new Minion(Min.Damaged_Golem, true, Tribe.Mech, tempFriends, 4, 2, 2, 1, board, Effect.None,
-					false, false, false, false, new ArrayList<Deathrattle>());
+			Minion toSummon = new Minion(Min.Damaged_Golem, true, Tribe.Mech, tempFriends, 4, 2, 2, 1, board,
+					Effect.None, false, false, false, false, new ArrayList<Deathrattle>());
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(toSummon.clone(board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1113,11 +1123,11 @@ public class Line {
 		case Kindly_Grandmother: {
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 
-			Minion toSummon = new Minion(Min.Big_Bad_Wolf, false, Tribe.Beast, tempFriends, 3, 2, 2, 1, board, Effect.None,
-					false, false, false, false, new ArrayList<Deathrattle>());
+			Minion toSummon = new Minion(Min.Big_Bad_Wolf, false, Tribe.Beast, tempFriends, 3, 2, 2, 1, board,
+					Effect.None, false, false, false, false, new ArrayList<Deathrattle>());
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(toSummon.clone(board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1127,11 +1137,11 @@ public class Line {
 		case Gold_Kindly_Grandmother: {
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 
-			Minion toSummon = new Minion(Min.Big_Bad_Wolf, true, Tribe.Beast, tempFriends, 6, 4, 4, 1, board, Effect.None,
-					false, false, false, false, new ArrayList<Deathrattle>());
+			Minion toSummon = new Minion(Min.Big_Bad_Wolf, true, Tribe.Beast, tempFriends, 6, 4, 4, 1, board,
+					Effect.None, false, false, false, false, new ArrayList<Deathrattle>());
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(toSummon.clone(board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1148,7 +1158,7 @@ public class Line {
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1165,7 +1175,7 @@ public class Line {
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1176,11 +1186,11 @@ public class Line {
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 			Line tempEnemies = (isFriend) ? board.getEnemies() : board.getFriends();
 
-			Minion toSummon = new Minion(Min.Finkle_Einhorn, false, Tribe.None, tempEnemies, 3, 3, 3, 1, board, Effect.None,
-					false, false, false, false, new ArrayList<Deathrattle>());
+			Minion toSummon = new Minion(Min.Finkle_Einhorn, false, Tribe.None, tempEnemies, 3, 3, 3, 1, board,
+					Effect.None, false, false, false, false, new ArrayList<Deathrattle>());
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempEnemies.summon(toSummon, Integer.MAX_VALUE, tempFriends);
+				tempEnemies.summon(toSummon.clone(board, tempFriends), Integer.MAX_VALUE, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1191,11 +1201,11 @@ public class Line {
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 			Line tempEnemies = (isFriend) ? board.getEnemies() : board.getFriends();
 
-			Minion toSummon = new Minion(Min.Finkle_Einhorn, true, Tribe.None, tempEnemies, 3, 3, 3, 1, board, Effect.None,
-					false, false, false, false, new ArrayList<Deathrattle>());
+			Minion toSummon = new Minion(Min.Finkle_Einhorn, true, Tribe.None, tempEnemies, 3, 3, 3, 1, board,
+					Effect.None, false, false, false, false, new ArrayList<Deathrattle>());
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempEnemies.summon(toSummon, Integer.MAX_VALUE, tempFriends);
+				tempEnemies.summon(toSummon.clone(board, tempFriends), Integer.MAX_VALUE, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1209,7 +1219,7 @@ public class Line {
 					false, false, false, false, new ArrayList<Deathrattle>());
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(toSummon.clone(board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1219,11 +1229,11 @@ public class Line {
 		case Gold_Mechano_egg: {
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 
-			Minion toSummon = new Minion(Min.Dino_Token, true, Tribe.Mech, tempFriends, 16, 16, 16, 1, board, Effect.None,
-					false, false, false, false, new ArrayList<Deathrattle>());
+			Minion toSummon = new Minion(Min.Dino_Token, true, Tribe.Mech, tempFriends, 16, 16, 16, 1, board,
+					Effect.None, false, false, false, false, new ArrayList<Deathrattle>());
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(toSummon.clone(board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1235,12 +1245,12 @@ public class Line {
 
 			ArrayList<Minion> toSummon = new ArrayList<Minion>();
 			for (int i = 0; i < 3; i++) {
-				toSummon.add(new Minion(Min.Thresh_Token, false, Tribe.Murloc, tempFriends, 1, 1, 1, 1, board, Effect.None,
-						false, false, false, false, new ArrayList<Deathrattle>()));
+				toSummon.add(new Minion(Min.Thresh_Token, false, Tribe.Murloc, tempFriends, 1, 1, 1, 1, board,
+						Effect.None, false, false, false, false, new ArrayList<Deathrattle>()));
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1252,12 +1262,12 @@ public class Line {
 
 			ArrayList<Minion> toSummon = new ArrayList<Minion>();
 			for (int i = 0; i < 3; i++) {
-				toSummon.add(new Minion(Min.Thresh_Token, true, Tribe.Murloc, tempFriends, 2, 2, 2, 1, board, Effect.None,
-						false, false, false, false, new ArrayList<Deathrattle>()));
+				toSummon.add(new Minion(Min.Thresh_Token, true, Tribe.Murloc, tempFriends, 2, 2, 2, 1, board,
+						Effect.None, false, false, false, false, new ArrayList<Deathrattle>()));
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1306,7 +1316,7 @@ public class Line {
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1323,7 +1333,7 @@ public class Line {
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1340,7 +1350,7 @@ public class Line {
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1357,7 +1367,41 @@ public class Line {
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
+			}
+
+			ArrayList<Board> toRet = new ArrayList<Board>();
+			toRet.add(board);
+			return toRet;
+		}
+		case Kangors_Apprentice: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+
+			ArrayList<Minion> toSummon = new ArrayList<Minion>();
+			for (int i = 0; i < Math.min(2, tempFriends.mechDeathOrder.size()); i++) {
+				toSummon.add(getBaseMinion(tempFriends.mechDeathOrder.get(i), tempFriends, board));
+			}
+			
+			for (int i = 0; i < friendlyRiven; i++) {
+				Debug.log("Summoning " + toSummon.get(0).getMinionEnum() + " in pos " + (rattle.getPos() + i), 2);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
+			}
+
+			ArrayList<Board> toRet = new ArrayList<Board>();
+			toRet.add(board);
+			return toRet;
+		}
+		case Gold_Kangors_Apprentice: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+
+			ArrayList<Minion> toSummon = new ArrayList<Minion>();
+			for (int i = 0; i < Math.min(4, tempFriends.mechDeathOrder.size()); i++) {
+				toSummon.add(getBaseMinion(tempFriends.mechDeathOrder.get(i), tempFriends, board));
+			}
+
+			for (int i = 0; i < friendlyRiven; i++) {
+				Debug.log("Summoning " + toSummon.get(0).getMinionEnum() + " in pos " + (rattle.getPos() + i), 2);
+				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
 			ArrayList<Board> toRet = new ArrayList<Board>();
@@ -1370,10 +1414,516 @@ public class Line {
 			return toRet;
 		}
 		default:
-			Debug.log("Something TERRIBLE went wrong with deathrattles.", 3);
+			Debug.log("Apparently I haven't coded in " + rattle.getRattle() + " rattle yet.", 3);
 			return null;
 		}
 
+	}
+	
+	public ArrayList<Minion> cloneMinionList(ArrayList<Minion> list, Board b, Line l) {
+		ArrayList<Minion> ret = new ArrayList<Minion>();
+		for(Minion m : list)
+			ret.add(m.clone(b, l));
+		return ret;
+	}
+	
+	public Minion getBaseMinion(SimpleEntry<Min, Boolean> info, Line l, Board b) {
+		switch (info.getKey()) {
+
+		// TODO: ADD THSE
+//		Curators_Amalgom,
+
+		
+		case Curators_Amalgom: {
+			if(!info.getValue())
+				return new Minion(Min.Curators_Amalgom, false, Tribe.All, l, 1, 1, 1, 1, b, Effect.None);
+			return new Minion(Min.Curators_Amalgom, false, Tribe.All, l, 2, 2, 2, 1, b, Effect.None);
+		}
+		case Rover_Token: {
+			if(!info.getValue())
+				return new Minion(Min.Rover_Token, false, Tribe.Mech, l, 2, 3, 3, 1, b, Effect.None);
+			return new Minion(Min.Rover_Token, true, Tribe.Mech, l, 4, 6, 6, 1, b, Effect.None);
+		}
+		case Imp: {
+			if(!info.getValue())
+				return new Minion(Min.Imp, false, Tribe.Demon, l, 1, 1, 1, 1, b, Effect.None);
+			return new Minion(Min.Imp, true, Tribe.Demon, l, 2, 2, 2, 1, b, Effect.None);
+		}
+		case Rat: {
+			if(!info.getValue())
+				return new Minion(Min.Rat, false, Tribe.Beast, l, 1, 1, 1, 1, b, Effect.None);
+			return new Minion(Min.Rat, true, Tribe.Beast, l, 2, 2, 2, 1, b, Effect.None);
+		}
+		case Micro_Bot: {
+			if(!info.getValue())
+				return new Minion(Min.Micro_Bot, false, Tribe.Mech, l, 1, 1, 1, 1, b, Effect.None);
+			return new Minion(Min.Micro_Bot, true, Tribe.Mech, l, 2, 2, 2, 1, b, Effect.None);
+		}
+		case Joey_Bot: {
+			if(!info.getValue())
+				return new Minion(Min.Joey_Bot, false, Tribe.Mech, l, 1, 1, 1, 1, b, Effect.None);
+			return new Minion(Min.Joey_Bot, true, Tribe.Mech, l, 2, 2, 2, 1, b, Effect.None);
+		}
+		case Damaged_Golem: {
+			if(!info.getValue())
+				return new Minion(Min.Damaged_Golem, false, Tribe.Mech, l, 2, 1, 1, 1, b, Effect.None);
+			return new Minion(Min.Damaged_Golem, true, Tribe.Mech, l, 4, 2, 2, 1, b, Effect.None);
+		}
+		case Big_Bad_Wolf: {
+			if(!info.getValue())
+				return new Minion(Min.Big_Bad_Wolf, false, Tribe.Beast, l, 3, 2, 2, 1, b, Effect.None);
+			return new Minion(Min.Big_Bad_Wolf, true, Tribe.Beast, l, 6, 4, 4, 1, b, Effect.None);
+		}
+		case Spider: {
+			if(!info.getValue())
+				return new Minion(Min.Spider, false, Tribe.Beast, l, 1, 1, 1, 1, b, Effect.None);
+			return new Minion(Min.Spider, true, Tribe.Beast, l, 2, 2, 2, 1, b, Effect.None);
+		}
+		case Finkle_Einhorn: {
+			if(!info.getValue())
+				return new Minion(Min.Finkle_Einhorn, false, Tribe.None, l, 3, 3, 3, 1, b, Effect.None);
+			return new Minion(Min.Finkle_Einhorn, true, Tribe.None, l, 3, 3, 3, 1, b, Effect.None);
+		}
+		case Dino_Token: {
+			if(!info.getValue())
+				return new Minion(Min.Dino_Token, false, Tribe.Mech, l, 8, 8, 8, 1, b, Effect.None);
+			return new Minion(Min.Dino_Token, true, Tribe.Mech, l, 16, 16, 16, 1, b, Effect.None);
+		}
+		case Thresh_Token: {
+			if(!info.getValue())
+				return new Minion(Min.Thresh_Token, false, Tribe.Murloc, l, 1, 1, 1, 1, b, Effect.None);
+			return new Minion(Min.Thresh_Token, true, Tribe.Murloc, l, 2, 2, 2, 1, b, Effect.None);
+		}
+		case Ironhide_Token: {
+			if(!info.getValue())
+				return new Minion(Min.Ironhide_Direhorn, false, Tribe.Beast, l, 5, 5, 5, 1, b, Effect.None);
+			return new Minion(Min.Ironhide_Direhorn, true, Tribe.Beast, l, 10, 10, 10, 1, b, Effect.None);
+		}
+		case Hyena: {
+			if(!info.getValue())
+				return new Minion(Min.Hyena, false, Tribe.Beast, l, 2, 2, 2, 1, b, Effect.None);
+			return new Minion(Min.Hyena, true, Tribe.Beast, l, 4, 4, 4, 1, b, Effect.None);
+		}
+		case Righteous_Protector: {
+			if (!info.getValue())
+				return new Minion(Min.Righteous_Protector, false, Tribe.None, l, 1, 1, 1, 1, b, Effect.None);
+			return new Minion(Min.Righteous_Protector, true, Tribe.None, l, 2, 2, 2, 1, b, Effect.None);
+		}
+		case Selfless_Hero: {
+			if (!info.getValue())
+				return new Minion(Min.Selfless_Hero, false, Tribe.None, l, 2, 1, 1, 1, b, Effect.None,
+						Deathrattle.Selfless_Hero);
+			return new Minion(Min.Selfless_Hero, true, Tribe.None, l, 4, 2, 2, 1, b, Effect.None,
+					Deathrattle.Gold_Selfless_Hero);
+		}
+		case Wrath_Weaver: {
+			if (!info.getValue())
+				return new Minion(Min.Wrath_Weaver, false, Tribe.None, l, 1, 1, 1, 1, b, Effect.None);
+			return new Minion(Min.Wrath_Weaver, true, Tribe.None, l, 2, 2, 2, 1, b, Effect.None);
+		}
+		case Alleycat: {
+			if (!info.getValue())
+				return new Minion(Min.Alleycat, false, Tribe.Beast, l, 1, 1, 1, 1, b, Effect.None);
+			return new Minion(Min.Alleycat, true, Tribe.Beast, l, 2, 2, 2, 1, b, Effect.None);
+
+		}
+		case Voidwalker: {
+			if (!info.getValue())
+				return new Minion(Min.Voidwalker, false, Tribe.Demon, l, 1, 3, 3, 1, b, Effect.None);
+			return new Minion(Min.Voidwalker, true, Tribe.Demon, l, 2, 6, 6, 1, b, Effect.None);
+		}
+		case Vulgar_Homunculus: {
+			if (!info.getValue())
+				return new Minion(Min.Vulgar_Homunculus, false, Tribe.Demon, l, 2, 4, 4, 1, b, Effect.None);
+			return new Minion(Min.Vulgar_Homunculus, true, Tribe.Demon, l, 4, 8, 8, 1, b, Effect.None);
+		}
+		case Mecharoo: {
+			if (!info.getValue())
+				return new Minion(Min.Mecharoo, false, Tribe.Mech, l, 1, 1, 1, 1, b, Effect.None, Deathrattle.Mecharoo);
+			return new Minion(Min.Mecharoo, false, Tribe.Mech, l, 2, 2, 2, 1, b, Effect.None,
+					Deathrattle.Gold_Mecharoo);
+		}
+		case Micro_Machine: {
+			if (!info.getValue())
+				return new Minion(Min.Micro_Machine, false, Tribe.Mech, l, 1, 2, 2, 1, b, Effect.None);
+			return new Minion(Min.Micro_Machine, true, Tribe.Mech, l, 2, 4, 4, 1, b, Effect.None);
+		}
+		case Murloc_Tidecaller: {
+			if (!info.getValue())
+				return new Minion(Min.Murloc_Tidecaller, false, Tribe.Murloc, l, 1, 2, 2, 1, b, Effect.None);
+			return new Minion(Min.Murloc_Tidecaller, true, Tribe.Murloc, l, 2, 4, 4, 1, b, Effect.None);
+		}
+		case Murloc_Tidehunter: {
+			if (!info.getValue())
+				return new Minion(Min.Murloc_Tidehunter, false, Tribe.Murloc, l, 2, 1, 1, 1, b, Effect.None);
+			return new Minion(Min.Murloc_Tidehunter, true, Tribe.Murloc, l, 4, 2, 2, 1, b, Effect.None);
+		}
+		case Rockpool_Hunter: {
+			if (!info.getValue())
+				return new Minion(Min.Rockpool_Hunter, false, Tribe.Murloc, l, 2, 3, 3, 1, b, Effect.None);
+			return new Minion(Min.Rockpool_Hunter, true, Tribe.Murloc, l, 4, 6, 6, 1, b, Effect.None);
+		}
+		case Dire_Wolf_Alpha: {
+			if(!info.getValue())
+				return new Minion(Min.Dire_Wolf_Alpha, false, Tribe.Beast, l, 2, 2, 2, 2, b, Effect.Dire_Wolf_Alpha);
+			return new Minion(Min.Dire_Wolf_Alpha, true, Tribe.Beast, l, 4, 4, 4, 2, b, Effect.Gold_Dire_Wolf_Alpha);
+		}
+		case Spawn_of_NZoth: {
+			if(!info.getValue())
+				return new Minion(Min.Spawn_of_NZoth, false, Tribe.None, l, 2, 2, 2, 2, b, Effect.None, Deathrattle.Spawn_of_NZoth);
+			return new Minion(Min.Spawn_of_NZoth, false, Tribe.None, l, 4, 4, 4, 2, b, Effect.None, Deathrattle.Gold_Spawn_of_NZoth);
+		}
+		case Kindly_Grandmother: {
+			if(!info.getValue())
+				return new Minion(Min.Kindly_Grandmother, false, Tribe.None, l, 1, 1, 1, 2, b, Effect.None, Deathrattle.Kindly_Grandmother);
+			return new Minion(Min.Kindly_Grandmother, true, Tribe.None, l, 2, 2, 2, 2, b, Effect.None, Deathrattle.Gold_Kindly_Grandmother);
+		}
+		case Mounted_Raptor: {
+			if(!info.getValue())
+				return new Minion(Min.Mounted_Raptor, false, Tribe.Beast, l, 3, 2, 2, 2, b, Effect.None, Deathrattle.Mounted_Raptor);
+			return new Minion(Min.Mounted_Raptor, true, Tribe.Beast, l, 6, 4, 4, 2, b, Effect.None, Deathrattle.Gold_Mounted_Raptor);
+		}
+		case Rat_Pack: {
+			if(!info.getValue())
+				return new Minion(Min.Rat_Pack, false, Tribe.Beast, l, 2, 2, 2, 2, b, Effect.None, Deathrattle.Rat_Pack);
+			return new Minion(Min.Rat_Pack, true, Tribe.Beast, l, 4, 4, 4, 2, b, Effect.None, Deathrattle.Gold_Rat_Pack);
+		}
+		case Scavenging_Hyena: {
+			if(!info.getValue())
+				return new Minion(Min.Scavenging_Hyena, false, Tribe.Beast, l, 2, 2, 2, 2, b, Effect.Scavenging_Hyena);
+			return new Minion(Min.Scavenging_Hyena, true, Tribe.Beast, l, 4, 4, 4, 2, b, Effect.Gold_Scavenging_Hyena);
+		}
+		case Nathrezim_Overseer: {
+			if(!info.getValue())
+				return new Minion(Min.Nathrezim_Overseer, false, Tribe.Demon, l, 2, 4, 4, 2, b, Effect.None);
+			return new Minion(Min.Nathrezim_Overseer, true, Tribe.Demon, l, 4, 8, 8, 2, b, Effect.None);
+		}
+		case Annoy_o_Tron: {
+			if(!info.getValue())
+				return new Minion(Min.Annoy_o_Tron, false, Tribe.Mech, l, 1, 2, 2, 2, b, Effect.None, true, false, false, true);
+			return new Minion(Min.Annoy_o_Tron, true, Tribe.Mech, l, 2, 4, 4, 2, b, Effect.None, true, false, false, true);
+		}
+		case Harvest_Golem: {
+			if(!info.getValue())
+				return new Minion(Min.Harvest_Golem, false, Tribe.Mech, l, 2, 1, 1, 2, b, Effect.None, Deathrattle.Harvest_Golem);
+			return new Minion(Min.Harvest_Golem, true, Tribe.Mech, l, 4, 2, 2, 2, b, Effect.None, Deathrattle.Gold_Harvest_Golem);
+		}
+		case Kaboom_Bot: {
+			if(!info.getValue())
+				return new Minion(Min.Kaboom_Bot, false, Tribe.Mech, l, 2, 2, 2, 2, b, Effect.None, Deathrattle.Kaboom_Bot);
+			return new Minion(Min.Kaboom_Bot, true, Tribe.Mech, l, 4, 4, 4, 2, b, Effect.None, Deathrattle.Gold_Kaboom_Bot);
+		}
+		case Metaltooth_Leaper: {
+			if(!info.getValue())
+				return new Minion(Min.Metaltooth_Leaper, false, Tribe.Mech, l, 3, 3, 3, 2, b, Effect.None);
+			return new Minion(Min.Metaltooth_Leaper, true, Tribe.Mech, l, 6, 6, 6, 2, b, Effect.None);
+		}
+		case Pogo_Hopper: {
+			if(!info.getValue())
+				return new Minion(Min.Pogo_Hopper, false, Tribe.Mech, l, 1, 1, 1, 2, b, Effect.None);
+			return new Minion(Min.Pogo_Hopper, true, Tribe.Mech, l, 2, 2, 2, 2, b, Effect.None);
+		}
+		case Shielded_Minibot: {
+			if(!info.getValue())
+				return new Minion(Min.Shielded_Minibot, false, Tribe.Mech, l, 2, 2, 2, 2, b, Effect.None, true, false, false, false);
+			return new Minion(Min.Shielded_Minibot, true, Tribe.Mech, l, 4, 4, 4, 2, b, Effect.None, true, false, false, false);
+		}
+		case Zoobot: {
+			if(!info.getValue())
+				return new Minion(Min.Zoobot, false, Tribe.Mech, l, 3, 3, 3, 2, b, Effect.None);
+			return new Minion(Min.Zoobot, true, Tribe.Mech, l, 6, 6, 6, 2, b, Effect.None);
+		}
+		case Coldlight_Seer: {
+			if(!info.getValue())
+				return new Minion(Min.Coldlight_Seer, false, Tribe.Murloc, l, 2, 3, 3, 2, b, Effect.None);
+			return new Minion(Min.Coldlight_Seer, true, Tribe.Murloc, l, 4, 6, 6, 2, b, Effect.None);
+		}
+		case Old_Murk_Eye: {
+			if(!info.getValue())
+				return new Minion(Min.Old_Murk_Eye, false, Tribe.Murloc, l, 2, 4, 4, 2, b, Effect.Old_Murk_Eye);
+			return new Minion(Min.Old_Murk_Eye, true, Tribe.Murloc, l, 4, 8, 8, 2, b, Effect.Gold_Old_Murk_Eye);
+		}
+		case Murloc_Warleader: {
+			if(!info.getValue())
+				return new Minion(Min.Murloc_Warleader, false, Tribe.Murloc, l, 3, 3, 3, 2, b, Effect.Murloc_Warleader);
+			return new Minion(Min.Murloc_Warleader, true, Tribe.Murloc, l, 6, 6, 6, 2, b, Effect.Gold_Murloc_Warleader);
+		}
+		case Nightmare_Amalgam: {
+			if(!info.getValue())
+				return new Minion(Min.Nightmare_Amalgam, false, Tribe.All, l, 3, 4, 4, 3, b, Effect.None);
+			return new Minion(Min.Nightmare_Amalgam, true, Tribe.All, l, 6, 8, 8, 3, b, Effect.None);
+		}
+		case Crowd_Favorite: {
+			if(!info.getValue())
+				return new Minion(Min.Crowd_Favorite, false, Tribe.None, l, 4, 4, 4, 3, b, Effect.None);
+			return new Minion(Min.Crowd_Favorite, true, Tribe.None, l, 8, 8, 8, 3, b, Effect.None);
+		}
+		case Crystalweaver: {
+			if(!info.getValue())
+				return new Minion(Min.Crystalweaver, false, Tribe.None, l, 5, 4, 4, 3, b, Effect.None);
+			return new Minion(Min.Crystalweaver, true, Tribe.None, l, 10, 8, 8, 3, b, Effect.None);
+		}
+		case Houndmaster: {
+			if(!info.getValue())
+				return new Minion(Min.Houndmaster, false, Tribe.None, l, 4, 3, 3, 3, b, Effect.None);
+			return new Minion(Min.Houndmaster, true, Tribe.None, l, 8, 6, 6, 3, b, Effect.None);
+		}
+		case Shifter_Zerus: {
+			if(!info.getValue())
+				return new Minion(Min.Shifter_Zerus, false, Tribe.None, l, 1, 1, 1, 3, b, Effect.None);
+			return new Minion(Min.Shifter_Zerus, true, Tribe.None, l, 2, 2, 2, 3, b, Effect.None);
+		}
+		case Tortollan_Shellraiser: {
+			if(!info.getValue())
+				return new Minion(Min.Tortollan_Shellraiser, false, Tribe.None, l, 2, 6, 6, 3, b, Effect.None, Deathrattle.Tortollan_Shellraiser);
+			return new Minion(Min.Tortollan_Shellraiser, true, Tribe.None, l, 4, 12, 12, 3, b, Effect.None, Deathrattle.Gold_Tortollan_Shellraiser);
+		}
+		case Infested_Wolf: {
+			if(!info.getValue())
+				return new Minion(Min.Infested_Wolf, false, Tribe.Beast, l, 3, 3, 3, 3, b, Effect.None, Deathrattle.Infested_Wolf);
+			return new Minion(Min.Infested_Wolf, true, Tribe.Beast, l, 6, 6, 6, 3, b, Effect.None, Deathrattle.Gold_Infested_Wolf);
+		}
+		case Imp_Gang_Boss: {
+			if(!info.getValue())
+				return new Minion(Min.Imp_Gang_Boss, false, Tribe.Demon, l, 2, 4, 4, 3, b, Effect.Imp_Gang_Boss);
+			return new Minion(Min.Imp_Gang_Boss, true, Tribe.Demon, l, 4, 8, 8, 3, b, Effect.Gold_Imp_Gang_Boss);
+		}
+		case Floating_Watcher: {
+			if(!info.getValue())
+				return new Minion(Min.Floating_Watcher, false, Tribe.Demon, l, 4, 4, 4, 3, b, Effect.None);
+			return new Minion(Min.Floating_Watcher, true, Tribe.Demon, l, 8, 8, 8, 3, b, Effect.None);
+		}
+		case Cobalt_Guardian: {
+			if(!info.getValue())
+				return new Minion(Min.Cobalt_Guardian, false, Tribe.Mech, l, 6, 3, 3, 3, b, Effect.Cobalt_Guardian);
+			return new Minion(Min.Cobalt_Guardian, true, Tribe.Mech, l, 12, 6, 6, 3, b, Effect.Gold_Cobalt_Guardian);
+		}
+		case Piloted_Shredder: {
+			if(!info.getValue())
+				return new Minion(Min.Piloted_Shredder, false, Tribe.Mech, l, 4, 3, 3, 3, b, Effect.None, Deathrattle.Piloted_Shredder);
+			return new Minion(Min.Piloted_Shredder, true, Tribe.Mech, l, 8, 6, 6, 3, b, Effect.None, Deathrattle.Gold_Piloted_Shredder);
+		}
+		case Psych_o_Tron: {
+			if(!info.getValue())
+				return new Minion(Min.Psych_o_Tron, false, Tribe.Mech, l, 3, 4, 4, 3, b, Effect.None, true, false, false, true);
+			return new Minion(Min.Psych_o_Tron, true, Tribe.Mech, l, 6, 8, 8, 3, b, Effect.None, true, false, false, true);
+		}
+		case Replicating_Menace: {
+			if(!info.getValue())
+				return new Minion(Min.Replicating_Menace, false, Tribe.Mech, l, 3, 1, 1, 3, b, Effect.None, Deathrattle.Replicating_Menace);
+			return new Minion(Min.Replicating_Menace, true, Tribe.Mech, l, 6, 2, 2, 3, b, Effect.None, Deathrattle.Gold_Replicating_Menace);
+		}
+		case Screwjank_Clunker: {
+			if(!info.getValue())
+				return new Minion(Min.Screwjank_Clunker, false, Tribe.Mech, l, 2, 5, 5, 3, b, Effect.None);
+			return new Minion(Min.Screwjank_Clunker, true, Tribe.Mech, l, 4, 10, 10, 3, b, Effect.None);
+		}
+		case Khadgar: {
+			if(!info.getValue())
+				return new Minion(Min.Khadgar, false, Tribe.None, l, 2, 2, 2, 3, b, Effect.Khadgar);
+			return new Minion(Min.Khadgar, true, Tribe.None, l, 4, 4, 4, 3, b, Effect.Gold_Khadgar);
+		}
+		case Pack_Leader: {
+			if(!info.getValue())
+				return new Minion(Min.Pack_Leader, false, Tribe.None, l, 3, 3, 3, 3, b, Effect.Pack_Leader);
+			return new Minion(Min.Pack_Leader, true, Tribe.None, l, 6, 6, 6, 3, b, Effect.Gold_Pack_Leader);
+		}
+		case Phalanx_Commander: {
+			if(!info.getValue())
+				return new Minion(Min.Phalanx_Commander, false, Tribe.None, l, 4, 5, 5, 3, b, Effect.Phalanx_Commander);
+			return new Minion(Min.Phalanx_Commander, true, Tribe.None, l, 8, 10, 10, 3, b, Effect.Gold_Phalanx_Commander);
+		}
+		case Soul_Juggler: {
+			if(!info.getValue())
+				return new Minion(Min.Soul_Juggler, false, Tribe.None, l, 3, 3, 3, 3, b, Effect.Soul_Juggler);
+			return new Minion(Min.Soul_Juggler, true, Tribe.None, l, 6, 6, 6, 3, b, Effect.Gold_Soul_Juggler);
+		}
+		case Defender_of_Argus: {
+			if(!info.getValue())
+				return new Minion(Min.Defender_of_Argus, false, Tribe.None, l, 2, 3, 3, 4, b, Effect.None);
+			return new Minion(Min.Defender_of_Argus, true, Tribe.None, l, 4, 6, 6, 4, b, Effect.None);
+		}
+		case Menagerie_Magician: {
+			if(!info.getValue())
+				return new Minion(Min.Menagerie_Magician, false, Tribe.None, l, 4, 4, 4, 4, b, Effect.None);
+			return new Minion(Min.Menagerie_Magician, true, Tribe.None, l, 8, 8, 8, 4, b, Effect.None);
+		}
+		case Virmen_Sensei: {
+			if(!info.getValue())
+				return new Minion(Min.Virmen_Sensei, false, Tribe.None, l, 4, 5, 5, 4, b, Effect.None);
+			return new Minion(Min.Virmen_Sensei, true, Tribe.None, l, 8, 10, 10, 4, b, Effect.None);
+		}
+		case Bolvar_Fireblood: {
+			if(!info.getValue())
+				return new Minion(Min.Bolvar_Fireblood, false, Tribe.None, l, 1, 7, 7, 4, b, Effect.Bolvar_Fireblood, true, false, false, false);
+			return new Minion(Min.Bolvar_Fireblood, true, Tribe.None, l, 2, 14, 14, 4, b, Effect.Gold_Bolvar_Fireblood, true, false, false, false);
+		}
+		case Festeroot_Hulk: {
+			if(!info.getValue())
+				return new Minion(Min.Festeroot_Hulk, false, Tribe.None, l, 2, 7, 7, 4, b, Effect.Festeroot_Hulk);
+			return new Minion(Min.Festeroot_Hulk, true, Tribe.None, l, 4, 14, 14, 4, b, Effect.Festeroot_Hulk);
+		}
+		case Cave_Hydra: {
+			if(!info.getValue())
+				return new Minion(Min.Cave_Hydra, false, Tribe.Beast, l, 2, 4, 4, 4, b, Effect.None, false, false, true, false);
+			return new Minion(Min.Cave_Hydra, true, Tribe.Beast, l, 4, 8, 8, 4, b, Effect.None, false, false, true, false);
+		}
+		case The_Beast: {
+			if(!info.getValue())
+				return new Minion(Min.The_Beast, false, Tribe.Beast, l, 9, 7, 7, 4, b, Effect.None, Deathrattle.The_Beast);
+			return new Minion(Min.The_Beast, true, Tribe.Beast, l, 18, 14, 14, 4, b, Effect.None, Deathrattle.Gold_The_Beast);
+		}
+		case Siegebreaker: {
+			if(!info.getValue())
+				return new Minion(Min.Siegebreaker, false, Tribe.Demon, l, 5, 8, 8, 4, b, Effect.Siegebreaker);
+			return new Minion(Min.Siegebreaker, true, Tribe.Demon, l, 10, 16, 16, 4, b, Effect.Gold_Siegebreaker);
+		}
+		case Annoy_o_Module: {
+			if(!info.getValue())
+				return new Minion(Min.Annoy_o_Module, false, Tribe.Mech, l, 2, 4, 4, 4, b, Effect.None);
+			return new Minion(Min.Annoy_o_Module, true, Tribe.Mech, l, 4, 8, 8, 4, b, Effect.None);
+		}
+		case Iron_Sensei: {
+			if(!info.getValue())
+				return new Minion(Min.Iron_Sensei, false, Tribe.Mech, l, 2, 2, 2, 4, b, Effect.None);
+			return new Minion(Min.Iron_Sensei, true, Tribe.Mech, l, 4, 4, 4, 4, b, Effect.None);
+		}
+		case Piloted_Sky_Golem: {
+			if(!info.getValue())
+				return new Minion(Min.Piloted_Sky_Golem, false, Tribe.Mech, l, 6, 4, 4, 4, b, Effect.None);
+			return new Minion(Min.Piloted_Sky_Golem, true, Tribe.Mech, l, 12, 8, 8, 4, b, Effect.None);
+		}
+		case Security_Rover: {
+			if(!info.getValue())
+				return new Minion(Min.Security_Rover, false, Tribe.Mech, l, 2, 6, 6, 4, b, Effect.Security_Rover);
+			return new Minion(Min.Security_Rover, true, Tribe.Mech, l, 4, 12, 12, 4, b, Effect.Gold_Security_Rover);
+		}
+		case Toxfin: {
+			if(!info.getValue())
+				return new Minion(Min.Toxfin, false, Tribe.Murloc, l, 1, 2, 2, 4, b, Effect.None);
+			return new Minion(Min.Toxfin, true, Tribe.Murloc, l, 2, 4, 4, 4, b, Effect.None);
+		}
+		case Brann_Bronzebeard: {
+			if(!info.getValue())
+				return new Minion(Min.Brann_Bronzebeard, false, Tribe.None, l, 2, 4, 4, 4, b, Effect.None);
+			return new Minion(Min.Brann_Bronzebeard, true, Tribe.None, l, 4, 8, 8, 4, b, Effect.None);
+		}
+		case Lightfang_Enforcer: {
+			if(!info.getValue())
+				return new Minion(Min.Lightfang_Enforcer, false, Tribe.None, l, 2, 2, 2, 5, b, Effect.None);
+			return new Minion(Min.Lightfang_Enforcer, true, Tribe.None, l, 4, 4, 4, 5, b, Effect.None);
+		}
+		case Strongshell_Scavenger: {
+			if(!info.getValue())
+				return new Minion(Min.Strongshell_Scavenger, false, Tribe.None, l, 2, 3, 3, 5, b, Effect.None);
+			return new Minion(Min.Strongshell_Scavenger, true, Tribe.None, l, 4, 6, 6, 5, b, Effect.None);
+		}
+		case Baron_Rivendare: {
+			if(!info.getValue())
+				return new Minion(Min.Baron_Rivendare, false, Tribe.None, l, 1, 7, 7, 5, b, Effect.Baron_Rivendare);
+			return new Minion(Min.Baron_Rivendare, true, Tribe.None, l, 2, 14, 14, 5, b, Effect.Gold_Baron_Rivendare);
+		}
+		case Goldrinn_the_Great_Wolf: {
+			if(!info.getValue())
+				return new Minion(Min.Goldrinn_the_Great_Wolf, false, Tribe.Beast, l, 4, 4, 4, 5, b, Effect.None, Deathrattle.Goldrinn_the_Great_Wolf);
+			return new Minion(Min.Goldrinn_the_Great_Wolf, true, Tribe.Beast, l, 8, 8, 8, 5, b, Effect.None, Deathrattle.Gold_Goldrinn_the_Great_Wolf);
+		}
+		case Ironhide_Direhorn: {
+			if(!info.getValue())
+				return new Minion(Min.Ironhide_Direhorn, false, Tribe.Beast, l, 7, 7, 7, 5, b, Effect.Ironhide_Direhorn);
+			return new Minion(Min.Ironhide_Direhorn, true, Tribe.Beast, l, 14, 14, 14, 5, b, Effect.Gold_Ironhide_Direhorn);
+		}
+		case Sated_Threshadon: {
+			if(!info.getValue())
+				return new Minion(Min.Sated_Threshadon, false, Tribe.Beast, l, 5, 7, 7, 5, b, Effect.None, Deathrattle.Sated_Threshadon);
+			return new Minion(Min.Sated_Threshadon, true, Tribe.Beast, l, 10, 14, 14, 5, b, Effect.None, Deathrattle.Gold_Sated_Threshadon);
+		}
+		case Savannah_Highmane: {
+			if(!info.getValue())
+				return new Minion(Min.Savannah_Highmane, false, Tribe.Beast, l, 6, 5, 5, 5, b, Effect.None, Deathrattle.Savannah_Highmane);
+			return new Minion(Min.Savannah_Highmane, true, Tribe.Beast, l, 12, 10, 10, 5, b, Effect.None, Deathrattle.Gold_Savannah_Highmane);
+		}
+		case Annihilan_Battlemaster: {
+			if(!info.getValue())
+				return new Minion(Min.Annihilan_Battlemaster, false, Tribe.Demon, l, 3, 1, 1, 5, b, Effect.None);
+			return new Minion(Min.Annihilan_Battlemaster, true, Tribe.Demon, l, 6, 2, 2, 5, b, Effect.None);
+		}
+		case MalGanis: {
+			if(!info.getValue())
+				return new Minion(Min.MalGanis, false, Tribe.Demon, l, 9, 7, 7, 5, b, Effect.MalGanis);
+			return new Minion(Min.MalGanis, true, Tribe.Demon, l, 18, 14, 14, 5, b, Effect.Gold_MalGanis);
+		}
+		case Voidlord: {
+			if(!info.getValue())
+				return new Minion(Min.Voidlord, false, Tribe.Demon, l, 3, 9, 9, 5, b, Effect.None, Deathrattle.Voidlord);
+			return new Minion(Min.Voidlord, true, Tribe.Demon, l, 6, 18, 18, 5, b, Effect.None, Deathrattle.Gold_Voidlord);
+		}
+		case Junkbot: {
+			if(!info.getValue())
+				return new Minion(Min.Junkbot, false, Tribe.Mech, l, 1, 5, 5, 5, b, Effect.Junkbot);
+			return new Minion(Min.Junkbot, true, Tribe.Mech, l, 2, 10, 10, 5, b, Effect.Gold_Junkbot);
+		}
+		case Mechano_Egg: {
+			if(!info.getValue())
+				return new Minion(Min.Mechano_Egg, false, Tribe.Mech, l, 0, 5, 5, 5, b, Effect.None, Deathrattle.Mechano_egg);
+			return new Minion(Min.Mechano_Egg, true, Tribe.Mech, l, 0, 10, 10, 5, b, Effect.None, Deathrattle.Gold_Mechano_egg);
+		}
+		case King_Bagurgle: {
+			if(!info.getValue())
+				return new Minion(Min.King_Bagurgle, false, Tribe.Murloc, l, 6, 3, 3, 5, b, Effect.None, Deathrattle.King_Bagurgle);
+			return new Minion(Min.King_Bagurgle, true, Tribe.Murloc, l, 12, 6, 6, 5, b, Effect.None, Deathrattle.Gold_King_Bagurgle);
+		}
+		case Primalfin_Lookout: {
+			if(!info.getValue())
+				return new Minion(Min.Primalfin_Lookout, false, Tribe.Murloc, l, 3, 2, 2, 5, b, Effect.None);
+			return new Minion(Min.Primalfin_Lookout, true, Tribe.Murloc, l, 6, 4, 4, 5, b, Effect.None);
+		}
+		case Kangors_Apprentice: {
+			if(!info.getValue())
+				return new Minion(Min.Kangors_Apprentice, false, Tribe.None, l, 3, 6, 6, 6, b, Effect.None, Deathrattle.Kangors_Apprentice);
+			return new Minion(Min.Kangors_Apprentice, true, Tribe.None, l, 6, 12, 12, 6, b, Effect.None, Deathrattle.Gold_Kangors_Apprentice);
+		}
+		case Zapp_Slywick: {
+			if(!info.getValue())
+				return new Minion(Min.Zapp_Slywick, false, Tribe.None, l, 7, 10, 10, 6, b, Effect.Zapp_Slywick);
+			return new Minion(Min.Zapp_Slywick, true, Tribe.None, l, 14, 20, 20, 6, b, Effect.Gold_Zapp_Slywick);
+		}
+		case Gentle_Megasaur: {
+			if(!info.getValue())
+				return new Minion(Min.Gentle_Megasaur, false, Tribe.Beast, l, 5, 4, 4, 6, b, Effect.None);
+			return new Minion(Min.Gentle_Megasaur, true, Tribe.Beast, l, 10, 8, 8, 6, b, Effect.None);
+		}
+		case Ghastcoiler: {
+			if(!info.getValue())
+				return new Minion(Min.Ghastcoiler, false, Tribe.Beast, l, 7, 7, 7, 6, b, Effect.None, Deathrattle.Ghastcoiler);
+			return new Minion(Min.Ghastcoiler, true, Tribe.Beast, l, 14, 14, 14, 6, b, Effect.None, Deathrattle.Gold_Ghastcoiler);
+		}
+		case Maexxna: {
+			if(!info.getValue())
+				return new Minion(Min.Maexxna, false, Tribe.Beast, l, 2, 8, 8, 6, b, Effect.None, false, true, false, false);
+			return new Minion(Min.Maexxna, true, Tribe.Beast, l, 4, 16, 16, 6, b, Effect.None, false, true, false, false);
+		}
+		case Mama_Bear: {
+			if(!info.getValue())
+				return new Minion(Min.Mama_Bear, false, Tribe.Beast, l, 4, 4, 4, 6, b, Effect.Mama_Bear);
+			return new Minion(Min.Mama_Bear, true, Tribe.Beast, l, 8, 8, 8, 6, b, Effect.Gold_Mama_Bear);
+		}
+		case Foe_Reaper_4000: {
+			if(!info.getValue())
+				return new Minion(Min.Foe_Reaper_4000, false, Tribe.Mech, l, 6, 9, 9, 6, b, Effect.None, false, false, true, false);
+			return new Minion(Min.Foe_Reaper_4000, true, Tribe.Mech, l, 12, 18, 18, 6, b, Effect.None, false, false, true, false);
+		}
+		case Sneeds_Old_Shredder: {
+			if(!info.getValue())
+				return new Minion(Min.Sneeds_Old_Shredder, false, Tribe.Mech, l, 5, 7, 7, 6, b, Effect.None, Deathrattle.Sneeds_Old_Shredder);
+			return new Minion(Min.Sneeds_Old_Shredder, true, Tribe.Mech, l, 10, 14, 14, 6, b, Effect.None, Deathrattle.Gold_Sneeds_Old_Shredder);
+		}
+		default:
+			Debug.log("This shouldn't be possible, must've missed a minion.", 3);
+			break;
+		}
+		
+		return null;
 	}
 
 	// Legacy code: BEFORE deathrattles were implemented, this was the _attacking
@@ -1477,8 +2027,9 @@ public class Line {
 		for (Minion toSummon : summonList) {
 			if (toSummon.getTribe() == Tribe.Mech || toSummon.getTribe() == Tribe.All) {
 				for (Minion m : minions) {
-					if (m.getEffect() == Effect.Cobalt_Guardian || m.getEffect() == Effect.Gold_Cobalt_Guardian)
+					if (m.getEffect() == Effect.Cobalt_Guardian || m.getEffect() == Effect.Gold_Cobalt_Guardian) {
 						m.setDivine(true);
+					}
 				}
 			} else if (toSummon.getTribe() == Tribe.Beast || toSummon.getTribe() == Tribe.All) {
 				for (Minion m : minions) {
@@ -1499,9 +2050,10 @@ public class Line {
 		}
 
 		int toRet = 0;
+		
 		for (Minion m : summonList) {
 			if (minions.size() < 7) {
-				minions.add(Math.min(minions.size(), _pos), m);
+				minions.add(Math.min(minions.size(), _pos + toRet), m);
 				toRet++;
 			}
 
@@ -1612,8 +2164,8 @@ public class Line {
 		for (Minion m : minions)
 			toRet.minions.addLast(m.clone(b, toRet));
 
-		for (Minion m : mechDeathOrder)
-			toRet.mechDeathOrder.addLast(m.clone(b, toRet));
+		for (SimpleEntry<Min, Boolean> e : mechDeathOrder)
+			toRet.mechDeathOrder.addLast(new SimpleEntry<Min, Boolean>(e.getKey(), e.getValue()));
 
 		toRet.rattles = rattles.clone(b, toRet);
 
@@ -1672,8 +2224,7 @@ public class Line {
 		for (Minion m : minions) {
 			toRet += m.getStars();
 		}
-
-		// TODO: add hero tavern level
+		
 		return toRet;
 	}
 
