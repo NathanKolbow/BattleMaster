@@ -10,7 +10,7 @@ Currently matching Hearthstone patch 16.0.8
 README is accurate as of Jan. 10, 2020
 
 ## Caveats
-* None
+* None (anymore)
 
 ## To-Do
 * Fix attack ordering for when there is a minion with 0 attack
