@@ -1,7 +1,7 @@
 # BattleMaster: A Hearthstone Battlegrounds companion app
 Sometimes it seems like there was no way you could've lost that fight, but you got crushed!  This application lets you see just what your odds really were.
 ```
-Still very much a work in-progress
+Currently almost fully functional!
 ```
 
 ## Version
