@@ -1,6 +1,7 @@
 package nkolbow.board;
 
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import nkolbow.board.minions.Effect;
 import nkolbow.board.minions.Min;
@@ -48,7 +49,12 @@ public class Board {
 	private static Board minDealtBoard;
 	private static Board minTakenBoard;
 
+	private static Integer[] tScore = new Integer[97];
+	
 	public static void battle(Board board) {
+		for(int i = 0; i < 97; i++)
+			tScore[i] = 0;
+		
 		totalWins = 0;
 		totalLosses = 0;
 		totalTies = 0;
@@ -96,12 +102,30 @@ public class Board {
 				+ "\t\tMax taken: " + maxTaken + ((maxTakenBoard == null) ? "\n" : "\n" + maxTakenBoard.toString())
 				+ "\nMin taken: " + minTaken + ((minTakenBoard == null) ? "\n" : "\n" + minTakenBoard.toString())
 				+ "\n=================================================");
+		
+		Scanner in = new Scanner(System.in);
+		System.out.print("\nDamage dealt (- if taken): ");
+		
+		int dmg = in.nextInt();
+		if(dmg < 0 || dmg > 96 || tScore[dmg] == 0) {
+			System.out.println("That number isn't possible.");
+			System.exit(0);
+		} else {
+			int total = 0;
+			for(int i = dmg; i >= 0; i--) {
+				total += tScore[i];
+			}
+			
+			System.out.println("Percentile: " + String.format("%.2f", 100*((double)total/(double)(totalWins + totalTies + totalLosses))));
+		}
 	}
 
 	private static void battleRecur(Board mainBoard, boolean friendAttack) {
 		if (mainBoard.enemies.isEmpty()) {
 			if (mainBoard.friends.isEmpty()) {
 				totalTies++;
+				
+				tScore[0 + 48]++;
 				return;
 			} else {
 				totalWins++;
@@ -116,6 +140,8 @@ public class Board {
 
 				totalUnbiasedDamage += mainBoard.friends.getDamage();
 				totalDealt += mainBoard.friends.getDamage() + mainBoard.friendTier;
+				
+				tScore[mainBoard.friends.getDamage() + mainBoard.friendTier]++;
 				return;
 			}
 		} else if (mainBoard.friends.isEmpty()) {
@@ -131,42 +157,44 @@ public class Board {
 
 			totalUnbiasedDamage -= mainBoard.friends.getDamage();
 			totalTaken += mainBoard.enemies.getDamage() + mainBoard.enemyTier;
+			
+			tScore[-(mainBoard.enemies.getDamage() + mainBoard.friendTier) + 48]++;
 			return;
 		}
 
 		ArrayList<Board> newBoards = new ArrayList<Board>();
 		if (friendAttack) {
 
-System.out.println("Board before:");
-mainBoard.printBoard();
-System.out.println(friendAttack);
+//System.out.println("Board before:");
+//mainBoard.printBoard();
+//System.out.println(friendAttack);
 
 			newBoards.addAll(mainBoard.friends.attack(mainBoard, friendAttack));
 
-System.out.println("Outcome boards (" + newBoards.size() + "):");
-for(Board b : newBoards)
-	b.printBoard();
-
-System.out.println("\n\n\n");
+//System.out.println("Outcome boards (" + newBoards.size() + "):");
+//for(Board b : newBoards)
+//	b.printBoard();
+//
+//System.out.println("\n\n\n");
 
 		} else {
 
-System.out.println("Board before:");
-mainBoard.printBoard();
-System.out.println(friendAttack);
+//System.out.println("Board before:");
+//mainBoard.printBoard();
+//System.out.println(friendAttack);
 
 			newBoards.addAll(mainBoard.enemies.attack(mainBoard, friendAttack));
 
-System.out.println("Outcome boards (" + newBoards.size() + "):");
-for(Board b : newBoards)
-	b.printBoard();
-
-System.out.println("\n\n\n");
+//System.out.println("Outcome boards (" + newBoards.size() + "):");
+//for(Board b : newBoards)
+//	b.printBoard();
+//
+//System.out.println("\n\n\n");
 		}
 
-		Debug.log("Total board states found: " + newBoards.size(), 1);
-		for(Board b : newBoards)
-			b.printBoard();
+//		Debug.log("Total board states found: " + newBoards.size(), 1);
+//		for(Board b : newBoards)
+//			b.printBoard();
 
 		for (Board b : newBoards) {
 			battleRecur(b, !friendAttack);

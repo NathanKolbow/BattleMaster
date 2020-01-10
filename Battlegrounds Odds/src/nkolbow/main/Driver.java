@@ -7,19 +7,13 @@ import nkolbow.board.minions.deathrattles.Deathrattle;
 public class Driver {
 
 	public static void main(String[] args) {
-		Board b = new Board(4, 4);
+		Board b = new Board(2, 2);
 		
 		try {
 			// TODO: FIGURE OUT WHY THE FUCK DEMON DEATHRATTLE IS TRIGGERING TWICE ON THAT SILLY LITTLE IMP
 			
-			b.addMinion(true, Min.Selfless_Hero, false, 1, 1, false, false, false, Deathrattle.Gold_Selfless_Hero);
-			b.addMinion(true, Min.Soul_Juggler, true, 3, 3, true, false, false);
-			b.addMinion(true, Min.Soul_Juggler, true, 3, 3, true, false, false);
-			b.addMinion(true, Min.Soul_Juggler, false, 3, 3, true, false, false);
-			b.addMinion(true, Min.Imp, false, 1, 1, true, false, false);
-			b.addMinion(true, Min.Imp, false, 1, 1, false, false, false);
-
-			b.addMinion(false, Min.Alleycat, false, 7, 1, false, false, false);
+			b.addMinion(true, Min.Ghastcoiler, false, 1, 1, false, false, false, Deathrattle.Gold_Ghastcoiler);
+			b.addMinion(false, Min.Alleycat, false, 1, 1, false, false, false);
 			
 			// stfu kripp
 //			b.addMinion("goldrinn.b.5.5.5;;o;", true, Integer.MAX_VALUE);

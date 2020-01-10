@@ -276,6 +276,7 @@ public class Line {
 //		}
 	}
 
+	static int ccc = 0;
 	private ArrayList<Board> rattle(Board board, boolean isFriend, int friendlyRiven, int enemyRiven) {
 		board = board.clone();
 
@@ -706,6 +707,276 @@ public class Line {
 
 			return toRet;
 		}
+		case Ghastcoiler: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			int openSlots = 7 - tempFriends.getAliveMinions().size();
+			int summons = Math.min(openSlots, 2 * friendlyRiven);
+			
+			ArrayList<Board> currBoards = new ArrayList<Board>();
+			ArrayList<Board> tempBoards = new ArrayList<Board>();
+			tempBoards.add(board);
+			
+			for(int i = 0; i < summons; i++) {
+				currBoards = tempBoards;
+				tempBoards = new ArrayList<Board>();
+				
+				for(Board b : currBoards) {
+					for(Min min : Minion.GHASTCOILER_LIST) {
+						Board clone = b.clone();
+						Line cloneFriends = (isFriend) ? clone.getFriends() : clone.getEnemies();
+						
+						cloneFriends.summon(getBaseMinion(new SimpleEntry<Min, Boolean>(min, false), cloneFriends, clone), rattle.getPos() + i, cloneFriends);
+						tempBoards.add(clone);
+					}
+				}
+			}
+			
+			return tempBoards;
+		}
+		case Gold_Ghastcoiler: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			int openSlots = 7 - tempFriends.getAliveMinions().size();
+			int summons = Math.min(openSlots, 4 * friendlyRiven);
+			
+			ArrayList<Board> currBoards = new ArrayList<Board>();
+			ArrayList<Board> tempBoards = new ArrayList<Board>();
+			tempBoards.add(board);
+			
+			for(int i = 0; i < summons; i++) {
+				currBoards = tempBoards;
+				tempBoards = new ArrayList<Board>();
+				
+				for(Board b : currBoards) {
+					for(Min min : Minion.GHASTCOILER_LIST) {
+						Board clone = b.clone();
+						Line cloneFriends = (isFriend) ? clone.getFriends() : clone.getEnemies();
+						
+						cloneFriends.summon(getBaseMinion(new SimpleEntry<Min, Boolean>(min, false), cloneFriends, clone), rattle.getPos() + i, cloneFriends);
+						tempBoards.add(clone);
+					}
+				}
+			}
+			
+			return tempBoards;
+		}
+		case Sneeds_Old_Shredder: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			int openSlots = 7 - tempFriends.getAliveMinions().size();
+			int summons = Math.min(openSlots, friendlyRiven);
+			
+			ArrayList<Board> currBoards = new ArrayList<Board>();
+			ArrayList<Board> tempBoards = new ArrayList<Board>();
+			tempBoards.add(board);
+			
+			for(int i = 0; i < summons; i++) {
+				currBoards = tempBoards;
+				tempBoards = new ArrayList<Board>();
+				
+				for(Board b : currBoards) {
+					for(Min min : Minion.SNEEDS_OLD_SHREDDER_LIST) {
+						Board clone = b.clone();
+						Line cloneFriends = (isFriend) ? clone.getFriends() : clone.getEnemies();
+						
+						cloneFriends.summon(getBaseMinion(new SimpleEntry<Min, Boolean>(min, false), cloneFriends, clone), rattle.getPos() + i, cloneFriends);
+						tempBoards.add(clone);
+					}
+				}
+			}
+			
+			return tempBoards;
+		}
+		case Gold_Sneeds_Old_Shredder: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			int openSlots = 7 - tempFriends.getAliveMinions().size();
+			int summons = Math.min(openSlots, 2 * friendlyRiven);
+			
+			ArrayList<Board> currBoards = new ArrayList<Board>();
+			ArrayList<Board> tempBoards = new ArrayList<Board>();
+			tempBoards.add(board);
+			
+			for(int i = 0; i < summons; i++) {
+				currBoards = tempBoards;
+				tempBoards = new ArrayList<Board>();
+				
+				for(Board b : currBoards) {
+					for(Min min : Minion.SNEEDS_OLD_SHREDDER_LIST) {
+						Board clone = b.clone();
+						Line cloneFriends = (isFriend) ? clone.getFriends() : clone.getEnemies();
+						
+						cloneFriends.summon(getBaseMinion(new SimpleEntry<Min, Boolean>(min, false), cloneFriends, clone), rattle.getPos() + i, cloneFriends);
+						tempBoards.add(clone);
+					}
+				}
+			}
+			
+			return tempBoards;
+		}
+		case Piloted_Sky_Golem: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			int openSlots = 7 - tempFriends.getAliveMinions().size();
+			int summons = Math.min(openSlots, friendlyRiven);
+			
+			ArrayList<Board> currBoards = new ArrayList<Board>();
+			ArrayList<Board> tempBoards = new ArrayList<Board>();
+			tempBoards.add(board);
+			
+			for(int i = 0; i < summons; i++) {
+				currBoards = tempBoards;
+				tempBoards = new ArrayList<Board>();
+				
+				for(Board b : currBoards) {
+					for(Min min : Minion.PILOTED_SKY_GOLEM_LIST) {
+						Board clone = b.clone();
+						Line cloneFriends = (isFriend) ? clone.getFriends() : clone.getEnemies();
+						
+						cloneFriends.summon(getBaseMinion(new SimpleEntry<Min, Boolean>(min, false), cloneFriends, clone), rattle.getPos() + i, cloneFriends);
+						tempBoards.add(clone);
+					}
+				}
+			}
+			
+			return tempBoards;
+		}
+		case Gold_Piloted_Sky_Golem: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			int openSlots = 7 - tempFriends.getAliveMinions().size();
+			int summons = Math.min(openSlots, 2 * friendlyRiven);
+			
+			ArrayList<Board> currBoards = new ArrayList<Board>();
+			ArrayList<Board> tempBoards = new ArrayList<Board>();
+			tempBoards.add(board);
+			
+			for(int i = 0; i < summons; i++) {
+				currBoards = tempBoards;
+				tempBoards = new ArrayList<Board>();
+				
+				for(Board b : currBoards) {
+					for(Min min : Minion.PILOTED_SKY_GOLEM_LIST) {
+						Board clone = b.clone();
+						Line cloneFriends = (isFriend) ? clone.getFriends() : clone.getEnemies();
+						
+						cloneFriends.summon(getBaseMinion(new SimpleEntry<Min, Boolean>(min, false), cloneFriends, clone), rattle.getPos() + i, cloneFriends);
+						tempBoards.add(clone);
+					}
+				}
+			}
+			
+			return tempBoards;
+		}
+		case Piloted_Shredder: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			int openSlots = 7 - tempFriends.getAliveMinions().size();
+			int summons = Math.min(openSlots, friendlyRiven);
+			
+			ArrayList<Board> currBoards = new ArrayList<Board>();
+			ArrayList<Board> tempBoards = new ArrayList<Board>();
+			tempBoards.add(board);
+			
+			for(int i = 0; i < summons; i++) {
+				currBoards = tempBoards;
+				tempBoards = new ArrayList<Board>();
+				
+				for(Board b : currBoards) {
+					for(Min min : Minion.PILOTED_SHREDDER_LIST) {
+						Board clone = b.clone();
+						Line cloneFriends = (isFriend) ? clone.getFriends() : clone.getEnemies();
+						
+						cloneFriends.summon(getBaseMinion(new SimpleEntry<Min, Boolean>(min, false), cloneFriends, clone), rattle.getPos() + i, cloneFriends);
+						tempBoards.add(clone);
+					}
+				}
+			}
+			
+			return tempBoards;
+		}
+		case Gold_Piloted_Shredder: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			int openSlots = 7 - tempFriends.getAliveMinions().size();
+			int summons = Math.min(openSlots, 2 * friendlyRiven);
+			
+			ArrayList<Board> currBoards = new ArrayList<Board>();
+			ArrayList<Board> tempBoards = new ArrayList<Board>();
+			tempBoards.add(board);
+			
+			for(int i = 0; i < summons; i++) {
+				currBoards = tempBoards;
+				tempBoards = new ArrayList<Board>();
+				
+				for(Board b : currBoards) {
+					for(Min min : Minion.PILOTED_SHREDDER_LIST) {
+						Board clone = b.clone();
+						Line cloneFriends = (isFriend) ? clone.getFriends() : clone.getEnemies();
+						
+						cloneFriends.summon(getBaseMinion(new SimpleEntry<Min, Boolean>(min, false), cloneFriends, clone), rattle.getPos() + i, cloneFriends);
+						tempBoards.add(clone);
+					}
+				}
+			}
+			
+			return tempBoards;
+		}
+		case Mounted_Raptor: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			int openSlots = 7 - tempFriends.getAliveMinions().size();
+			int summons = Math.min(openSlots, friendlyRiven);
+			
+			ArrayList<Board> currBoards = new ArrayList<Board>();
+			ArrayList<Board> tempBoards = new ArrayList<Board>();
+			tempBoards.add(board);
+			
+			for(int i = 0; i < summons; i++) {
+				currBoards = tempBoards;
+				tempBoards = new ArrayList<Board>();
+				
+				for(Board b : currBoards) {
+					for(Min min : Minion.MOUNTED_RAPTOR_LIST) {
+						Board clone = b.clone();
+						Line cloneFriends = (isFriend) ? clone.getFriends() : clone.getEnemies();
+						
+						cloneFriends.summon(getBaseMinion(new SimpleEntry<Min, Boolean>(min, false), cloneFriends, clone), rattle.getPos() + i, cloneFriends);
+						tempBoards.add(clone);
+					}
+				}
+			}
+			
+			return tempBoards;
+		}
+		case Gold_Mounted_Raptor: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			int openSlots = 7 - tempFriends.getAliveMinions().size();
+			int summons = Math.min(openSlots, 2 * friendlyRiven);
+			
+			ArrayList<Board> currBoards = new ArrayList<Board>();
+			ArrayList<Board> tempBoards = new ArrayList<Board>();
+			tempBoards.add(board);
+			
+			for(int i = 0; i < summons; i++) {
+				currBoards = tempBoards;
+				tempBoards = new ArrayList<Board>();
+				
+				for(Board b : currBoards) {
+					for(Min min : Minion.MOUNTED_RAPTOR_LIST) {
+						Board clone = b.clone();
+						Line cloneFriends = (isFriend) ? clone.getFriends() : clone.getEnemies();
+						
+						cloneFriends.summon(getBaseMinion(new SimpleEntry<Min, Boolean>(min, false), cloneFriends, clone), rattle.getPos() + i, cloneFriends);
+						tempBoards.add(clone);
+					}
+				}
+			}
+			
+			return tempBoards;
+		}
 		case Demon: {
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 			int juggleCount = 0;
@@ -1074,7 +1345,6 @@ public class Line {
 			return toRet;
 		}
 		case Replicating_Menace: {
-			Debug.log("Triggering menace", 3);
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 
 			ArrayList<Minion> toSummon = new ArrayList<Minion>();
@@ -1092,7 +1362,6 @@ public class Line {
 			return toRet;
 		}
 		case Gold_Replicating_Menace: {
-			Debug.log("Triggering golden menace", 3);
 			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
 
 			ArrayList<Minion> toSummon = new ArrayList<Minion>();
@@ -1453,6 +1722,7 @@ public class Line {
 			toRet.add(board);
 			return toRet;
 		}
+		
 		case None: {
 			ArrayList<Board> toRet = new ArrayList<Board>();
 			toRet.add(board);
@@ -1462,7 +1732,6 @@ public class Line {
 			Debug.log("Apparently I haven't coded in " + rattle.getRattle() + " rattle yet.", 3);
 			return null;
 		}
-
 	}
 
 	public ArrayList<Minion> cloneMinionList(ArrayList<Minion> list, Board b, Line l) {

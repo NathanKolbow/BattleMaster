@@ -8,6 +8,19 @@ import nkolbow.board.minions.deathrattles.Deathrattle;
 
 public class Minion {
 
+	public static final Min[] MOUNTED_RAPTOR_LIST = new Min[] { Min.Righteous_Protector, Min.Selfless_Hero, Min.Wrath_Weaver, Min.Alleycat, Min.Voidwalker,
+																Min.Mecharoo, Min.Murloc_Tidecaller, Min.Pogo_Hopper, Min.Shifter_Zerus, Min.Toxfin };
+	public static final Min[] PILOTED_SHREDDER_LIST = new Min[] { Min.Dire_Wolf_Alpha, Min.Vulgar_Homunculus, Min.Micro_Machine, Min.Murloc_Tidecaller, Min.Rockpool_Hunter,
+																Min.Kindly_Grandmother, Min.Scavenging_Hyena, Min.Annoy_o_Tron, Min.Shielded_Minibot, Min.Khadgar };
+	public static final Min[] PILOTED_SKY_GOLEM_LIST = new Min[] { Min.Old_Murk_Eye, Min.Crowd_Favorite, Min.Crystalweaver, Min.Houndmaster, Min.Tortollan_Shellraiser, Min.Infested_Wolf,
+																Min.Replicating_Menace, Min.Screwjank_Clunker, Min.Defender_of_Argus, Min.Annoy_o_Module, Min.Baron_Rivendare,
+																Min.Strongshell_Scavenger, Min.Gentle_Megasaur };
+	public static final Min[] SNEEDS_OLD_SHREDDER_LIST = new Min[] { Min.Old_Murk_Eye, Min.Khadgar, Min.Shifter_Zerus, Min.The_Beast, Min.Goldrinn_the_Great_Wolf, Min.Bolvar_Fireblood, Min.The_Boogeymonster,
+																	Min.Baron_Rivendare, Min.Brann_Bronzebeard, Min.King_Bagurgle, Min.MalGanis, Min.Foe_Reaper_4000, Min.Maexxna, Min.Zapp_Slywick };
+	public static final Min[] GHASTCOILER_LIST = new Min[] { Min.Selfless_Hero, Min.Mecharoo, Min.Spawn_of_NZoth, Min.Kindly_Grandmother, Min.Mounted_Raptor, Min.Rat_Pack, Min.Harvest_Golem, Min.Kaboom_Bot,
+															Min.Tortollan_Shellraiser, Min.Infested_Wolf, Min.The_Beast, Min.Piloted_Shredder, Min.Replicating_Menace, Min.Piloted_Sky_Golem, Min.Mechano_Egg, Min.Goldrinn_the_Great_Wolf, Min.Sated_Threshadon, Min.Savannah_Highmane,
+															Min.Voidlord, Min.King_Bagurgle, Min.Kangors_Apprentice, Min.Sneeds_Old_Shredder };
+	
 	public enum Tribe {
 		Beast, Murloc, Mech, Dragon, Demon, All, None
 	}
