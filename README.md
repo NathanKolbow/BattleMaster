@@ -13,6 +13,7 @@ README is accurate as of Jan. 10, 2020
 * None (anymore)
 
 ## To-Do
+* Get up to date with the most recent version of Battlegrounds
 * Fix attack ordering for when there is a minion with 0 attack
 * ~~Get deathrattles working~~
 * ~~Test Khadgar w/ summon buffs (e.g. Mama Bear) to make sure that works as expected~~
