@@ -7,8 +7,6 @@ Currently almost fully functional!
 ## Version
 Currently matching Hearthstone patch 16.0.8
 
-README is accurate as of Jan. 10, 2020
-
 ## Caveats
 * None (anymore)
 
