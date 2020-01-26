@@ -11,7 +11,7 @@ public class Driver {
 		
 		Board b = new Board(6, 5, Hero.Lich, Hero.Yogg);
 		
-		try {
+		try { 
 			// TODO: FIGURE OUT WHY THE FUCK DEMON DEATHRATTLE IS TRIGGERING TWICE ON THAT SILLY LITTLE IMP
 			b.addMinion(true, Min.Spawn_of_NZoth, false, 2, 2, false, false, false, Deathrattle.Spawn_of_NZoth);
 			b.addMinion(true, Min.Cobalt_Guardian, false, 15, 4, true, false, false, Deathrattle.Replicating_Menace);
