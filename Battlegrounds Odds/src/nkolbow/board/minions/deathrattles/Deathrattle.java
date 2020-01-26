@@ -14,6 +14,7 @@ public enum Deathrattle {
 	Gold_Sneeds_Old_Shredder, Gold_King_Bagurgle,
 	
 	Demon, // This deathrattle is used for Soul Jugglers
+	Reborn, // For processing reborn (duh)
 	
 	None,   // special deathrattle code used by RattleList to signal the end of all deathrattles
 	Process // special deathrattle code used by RattleList & deathrattle processing

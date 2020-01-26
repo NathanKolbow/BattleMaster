@@ -16,6 +16,9 @@ import nkolbow.debug.Debug;
 
 public class Line {
 
+	public Hero hero;
+	public boolean heroUsed = false;
+	
 	private LinkedList<Minion> minions;
 	private LinkedList<SimpleEntry<Min, Boolean>> mechDeathOrder;
 	private RattleList rattles; // used when deathrattles are being triggered sequentially
@@ -25,10 +28,16 @@ public class Line {
 	// the index of the minion next to attack
 	public int _attacking = 0;
 
-	public Line() {
+	public Line(Hero hero) {
 		minions = new LinkedList<Minion>();
 		mechDeathOrder = new LinkedList<SimpleEntry<Min, Boolean>>();
 		rattles = new RattleList();
+		
+		this.hero = hero;
+		
+		if(!(hero == Hero.Patches || hero == Hero.Ragnaros)) {
+			heroUsed = true;
+		}
 	}
 
 	/**
@@ -40,6 +49,8 @@ public class Line {
 	 *         board given that we were attacking
 	 */
 	public ArrayList<Board> attack(Board mainBoard, boolean isFriend) {
+		
+		
 		ArrayList<Board> toRet = new ArrayList<Board>();
 
 		Minion __attacker = (isFriend) ? mainBoard.getFriends().minions.get(mainBoard.getFriends()._attacking)
@@ -347,7 +358,7 @@ public class Line {
 				tempFriends._attacking = 0;
 			else if (tempFriends._attacking > tempFriends.minions.size())
 				Debug.log("I didn't think it was possible to reach this case. Eek.", 3);
-
+			
 			toRemove = new LinkedList<Minion>();
 			toDec = 0;
 			for (Minion m : tempEnemies.minions) {
@@ -470,8 +481,6 @@ public class Line {
 
 			if (friendlyRiven == 1) {
 				for (int i = 0; i < choices; i++) {
-					Debug.log((rattle.getSource().getLine() == board.getEnemies()) ? "ENEMY" : "FRIEND", 3);
-
 					Board newBoard = board.clone();
 					Line tempEnemies = (isFriend) ? newBoard.getEnemies() : newBoard.getFriends();
 
@@ -1697,7 +1706,6 @@ public class Line {
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				Debug.log("Summoning " + toSummon.get(0).getMinionEnum() + " in pos " + (rattle.getPos() + i), 2);
 				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
@@ -1714,7 +1722,6 @@ public class Line {
 			}
 
 			for (int i = 0; i < friendlyRiven; i++) {
-				Debug.log("Summoning " + toSummon.get(0).getMinionEnum() + " in pos " + (rattle.getPos() + i), 2);
 				tempFriends.summon(cloneMinionList(toSummon, board, tempFriends), rattle.getPos() + i, tempFriends);
 			}
 
@@ -1722,7 +1729,18 @@ public class Line {
 			toRet.add(board);
 			return toRet;
 		}
-		
+		case Reborn: {
+			Line tempFriends = (isFriend) ? board.getFriends() : board.getEnemies();
+			
+			Minion toSummon = getBaseMinion(new SimpleEntry<Min, Boolean>(rattle.getSource().getMinionEnum(), rattle.getSource().getIsGolden()), tempFriends, board);
+			toSummon.setHealth(1);
+			
+			tempFriends.summon(toSummon, rattle.getPos(), tempFriends);
+			
+			ArrayList<Board> toRet = new ArrayList<Board>();
+			toRet.add(board);
+			return toRet;
+		}
 		case None: {
 			ArrayList<Board> toRet = new ArrayList<Board>();
 			toRet.add(board);
@@ -2288,8 +2306,13 @@ public class Line {
 			return new Minion(Min.Sneeds_Old_Shredder, true, Tribe.Mech, l, 10, 14, 14, 6, b, Effect.None,
 					Deathrattle.Gold_Sneeds_Old_Shredder);
 		}
+		case The_Boogeymonster: {
+			if(!info.getValue())
+				return new Minion(Min.The_Boogeymonster, false, Tribe.None, l, 6, 7, 7, 4, b, Effect.The_Boogeymonster);
+			return new Minion(Min.The_Boogeymonster, true, Tribe.None, l, 12, 14, 14, 4, b, Effect.Gold_The_Boogeymonster);
+		}
 		default:
-			Debug.log("This shouldn't be possible, must've missed a minion.", 3);
+			Debug.log("This shouldn't be possible, must've missed a minion. " + info.getKey(), 3);
 			break;
 		}
 
@@ -2539,7 +2562,7 @@ public class Line {
 	 * Creates a DEEP clone of itself
 	 */
 	public Line clone(Board b) {
-		Line toRet = new Line();
+		Line toRet = new Line(this.hero);
 		for (Minion m : minions)
 			toRet.minions.addLast(m.clone(b, toRet));
 

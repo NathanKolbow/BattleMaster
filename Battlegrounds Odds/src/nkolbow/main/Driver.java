@@ -1,19 +1,34 @@
 package nkolbow.main;
 
 import nkolbow.board.Board;
+import nkolbow.board.Hero;
 import nkolbow.board.minions.Min;
 import nkolbow.board.minions.deathrattles.Deathrattle;
 
 public class Driver {
 
 	public static void main(String[] args) {
-		Board b = new Board(2, 2);
+		
+		Board b = new Board(6, 5, Hero.Lich, Hero.Yogg);
 		
 		try {
 			// TODO: FIGURE OUT WHY THE FUCK DEMON DEATHRATTLE IS TRIGGERING TWICE ON THAT SILLY LITTLE IMP
+			b.addMinion(true, Min.Spawn_of_NZoth, false, 2, 2, false, false, false, Deathrattle.Spawn_of_NZoth);
+			b.addMinion(true, Min.Cobalt_Guardian, false, 15, 4, true, false, false, Deathrattle.Replicating_Menace);
+			b.addMinion(true, Min.Cobalt_Guardian, false, 17, 6, true, false, false, Deathrattle.Replicating_Menace);
+			b.addMinion(true, Min.Iron_Sensei, false, 16, 12, true, false, true);
+			b.addMinion(true, Min.Mechano_Egg, false, 8, 15, true, false, true, Deathrattle.Mechano_egg);
+			b.addMinion(true, Min.Security_Rover, false, 20, 20, true, false, true);
+			b.addMinion(true, Min.Security_Rover, false, 24, 24, true, false, true);
 			
-			b.addMinion(true, Min.Ghastcoiler, false, 1, 1, false, false, false, Deathrattle.Gold_Ghastcoiler);
-			b.addMinion(false, Min.Alleycat, false, 1, 1, false, false, false);
+			b.addMinion(false, Min.Foe_Reaper_4000, false, 10, 11, false, false, false);
+			b.addMinion(false, Min.Cobalt_Guardian, false, 23, 10, true, false, false, Deathrattle.Replicating_Menace);
+			b.addMinion(false, Min.Cobalt_Guardian, false, 20, 9, true, false, false);
+			b.addMinion(false, Min.Bolvar_Fireblood, false, 1, 7, true, false, false);
+			b.addMinion(false, Min.Piloted_Sky_Golem, true, 20, 8, false, false, false, Deathrattle.Gold_Piloted_Sky_Golem);
+			b.addMinion(false, Min.Harvest_Golem, true, 14, 8, false, false, false, Deathrattle.Gold_Harvest_Golem);
+			b.addMinion(false, Min.Mechano_Egg, false, 12, 11, true, false, true, Deathrattle.Mechano_egg);
+			
 			
 			// stfu kripp
 //			b.addMinion("goldrinn.b.5.5.5;;o;", true, Integer.MAX_VALUE);

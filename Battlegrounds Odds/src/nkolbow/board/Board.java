@@ -26,9 +26,9 @@ public class Board {
 	private final int friendTier;
 	private final int enemyTier;
 
-	public Board(int friendTier, int enemyTier) {
-		friends = new Line();
-		enemies = new Line();
+	public Board(int friendTier, int enemyTier, Hero friendlyHero, Hero enemyHero) {
+		friends = new Line(friendlyHero);
+		enemies = new Line(enemyHero);
 
 		this.friendTier = friendTier;
 		this.enemyTier = enemyTier;
@@ -68,16 +68,16 @@ public class Board {
 
 		if (board.enemies.size() > board.friends.size()) {
 			Debug.log("Only the enemy can attack first.", 0);
-			battleRecur(board, false);
+			beginBattleSequence(board, false);
 		} else if (board.friends.size() > board.enemies.size()) {
 			Debug.log("Only we can attack first.", 0);
-			battleRecur(board, true);
+			beginBattleSequence(board, true);
 		} else {
 			Debug.log("Both sides have the chance to attack first.", 0);
-			Debug.log("======== FRIENDLY ATTACKING FIRST ========", 1);
-			battleRecur(board, true);
+			//Debug.log("======== FRIENDLY ATTACKING FIRST ========", 1);
+			//beginBattleSequence(board, true);
 			Debug.log("\n\n======== ENEMY ATTACKING FIRST ========", 1);
-			battleRecur(board, false);
+			beginBattleSequence(board, false);
 		}
 
 		if(minDealt == Integer.MAX_VALUE)
@@ -118,8 +118,23 @@ public class Board {
 			
 			System.out.println("Percentile: " + String.format("%.2f", 100*((double)total/(double)(totalWins + totalTies + totalLosses))));
 		}
+		
+		in.close();
 	}
 
+	public static void beginBattleSequence(Board mainBoard, boolean friendAttack) {
+		//ArrayList<Board> boards = mainBoard.processHeroPowers(mainBoard, true, true);
+		//for(Board b : boards)
+			battleRecur(mainBoard, friendAttack);
+	}
+	
+	// TODO: IMPLEMENT THIS
+	private ArrayList<Board> processHeroPowers(Board board, boolean friendlyHeroPower, boolean enemyHeroPower) {
+		ArrayList<Board> toRet = new ArrayList<Board>();
+		toRet.add(board);
+		return toRet;
+	}
+	
 	private static void battleRecur(Board mainBoard, boolean friendAttack) {
 		if (mainBoard.enemies.isEmpty()) {
 			if (mainBoard.friends.isEmpty()) {
@@ -922,7 +937,7 @@ public class Board {
 	 * Creates a DEEP copy of the board given
 	 */
 	public Board clone() {
-		Board toRet = new Board(this.friendTier, this.enemyTier);
+		Board toRet = new Board(this.friendTier, this.enemyTier, this.friends.hero, this.enemies.hero);
 
 		toRet.enemies = this.enemies.clone(toRet);
 		toRet.friends = this.friends.clone(toRet);

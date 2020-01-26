@@ -94,6 +94,14 @@ public class Minion {
 		this.deathrattles.add(rattle);
 	}
 
+	public void setHealth(int h) {
+		this.health = h;
+	}
+	
+	public void giveReborn() {
+		this.deathrattles.add(Deathrattle.Reborn);
+	}
+	
 	public void setDeathrattles(ArrayList<Deathrattle> deaths) {
 		this.deathrattles = deaths;
 	}
